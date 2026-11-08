@@ -1,0 +1,65 @@
+@prefix lv2: <http://lv2plug.in/ns/lv2core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+
+<urn:davidian:ashgrove-classic-lead> a lv2:Plugin ;
+    lv2:binary <ashgrove.dll> ;
+    rdfs:seeAlso <ashgrove.ttl> ;
+    <http://lv2plug.in/ns/extensions/ui#ui> <urn:davidian:ashgrove-classic-lead#ui> .
+
+<urn:davidian:ashgrove-classic-lead#ui> a <http://lv2plug.in/ns/extensions/ui#WindowsUI> ;
+    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui.dll> ;
+    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;
+    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,
+        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;
+    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .
+
+<urn:davidian:ashgrove-cascade-lead> a lv2:Plugin ;
+    lv2:binary <ashgrove.dll> ;
+    rdfs:seeAlso <ashgrove.ttl> ;
+    <http://lv2plug.in/ns/extensions/ui#ui> <urn:davidian:ashgrove-cascade-lead#ui> .
+
+<urn:davidian:ashgrove-cascade-lead#ui> a <http://lv2plug.in/ns/extensions/ui#WindowsUI> ;
+    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui.dll> ;
+    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;
+    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,
+        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;
+    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .
+
+<urn:davidian:ashgrove-low-end> a lv2:Plugin ;
+    lv2:binary <ashgrove.dll> ;
+    rdfs:seeAlso <ashgrove.ttl> ;
+    <http://lv2plug.in/ns/extensions/ui#ui> <urn:davidian:ashgrove-low-end#ui> .
+
+<urn:davidian:ashgrove-low-end#ui> a <http://lv2plug.in/ns/extensions/ui#WindowsUI> ;
+    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui.dll> ;
+    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;
+    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,
+        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;
+    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .
+
+<urn:davidian:ashgrove-spring-combo> a lv2:Plugin ;
+    lv2:binary <ashgrove.dll> ;
+    rdfs:seeAlso <ashgrove.ttl> ;
+    <http://lv2plug.in/ns/extensions/ui#ui> <urn:davidian:ashgrove-spring-combo#ui> .
+
+<urn:davidian:ashgrove-spring-combo#ui> a <http://lv2plug.in/ns/extensions/ui#WindowsUI> ;
+    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui.dll> ;
+    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;
+    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,
+        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;
+    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .
+
+<urn:davidian:ashgrove-dual-rail> a lv2:Plugin ;
+    lv2:binary <ashgrove.dll> ;
+    rdfs:seeAlso <ashgrove.ttl> ;
+    <http://lv2plug.in/ns/extensions/ui#ui> <urn:davidian:ashgrove-dual-rail#ui> .
+
+<urn:davidian:ashgrove-dual-rail#ui> a <http://lv2plug.in/ns/extensions/ui#WindowsUI> ;
+    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui.dll> ;
+    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;
+    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,
+        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;
+    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .
+

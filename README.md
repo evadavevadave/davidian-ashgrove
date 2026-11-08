@@ -44,7 +44,7 @@ install is somewhere else. `run_checks.sh` rebuilds, then runs every check and w
 Ashgrove is Windows-only (64-bit) for now: the GUI is a Win32 window, and only the Windows build has been compiled and
 tested. The build needs a CPU with AVX2.
 
-Copy the whole `build\lv2\ashgrove.lv2` folder (`ashgrove.dll`, `ashgrove_ui.dll` and the two .ttl files) into one of
+A ready-built bundle is in the repository, so you don't have to build it first. Copy the whole `build\lv2\ashgrove.lv2` folder (`ashgrove.dll`, `ashgrove_ui.dll` and the two .ttl files) into one of
 the standard Windows LV2 folders: `%APPDATA%\LV2` (current user) or `%COMMONPROGRAMFILES%\LV2` (all users).
 
 If your host doesn't scan that folder, add it to the host's LV2 search path or set the `LV2_PATH` environment variable.

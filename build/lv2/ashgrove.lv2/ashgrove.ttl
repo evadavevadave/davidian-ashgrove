@@ -1,0 +1,300 @@
+@prefix lv2: <http://lv2plug.in/ns/lv2core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+
+<urn:davidian:ashgrove-classic-lead> a lv2:Plugin , lv2:AmplifierPlugin ;
+    doap:name "Davidian Ashgrove Classic Lead" ;
+    lv2:port
+    [ a lv2:InputPort , lv2:AudioPort ; lv2:index 0 ; lv2:symbol "in" ; lv2:name "In" ] ,
+    [ a lv2:OutputPort , lv2:AudioPort ; lv2:index 1 ; lv2:symbol "out" ; lv2:name "Out" ] ,
+    [ a lv2:OutputPort , lv2:ControlPort ; lv2:index 2 ; lv2:symbol "latency" ; lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency , lv2:integer ; lv2:minimum 0 ; lv2:maximum 1024 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ; lv2:symbol "model" ; lv2:name "Model" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "100W" ; rdf:value 0 ] , [ rdfs:label "50W" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ; lv2:symbol "tube" ; lv2:name "Output Tube" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 2.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "EL34" ; rdf:value 0 ] , [ rdfs:label "KT77" ; rdf:value 1 ] , [ rdfs:label "6550" ; rdf:value 2 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ; lv2:symbol "input" ; lv2:name "Input" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 3.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "Channel I High" ; rdf:value 0 ] , [ rdfs:label "Channel I Low" ; rdf:value 1 ] , [ rdfs:label "Channel II High" ; rdf:value 2 ] , [ rdfs:label "Channel II Low" ; rdf:value 3 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ; lv2:symbol "oversampling" ; lv2:name "Oversampling" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "2x" ; rdf:value 0 ] , [ rdfs:label "4x" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ; lv2:symbol "trim" ; lv2:name "Input Trim (dB)" ;
+        lv2:default 0.0 ; lv2:minimum -36.0 ; lv2:maximum 36.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ; lv2:symbol "level" ; lv2:name "Output Level (dB)" ;
+        lv2:default -6.0 ; lv2:minimum -60.0 ; lv2:maximum 12.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ; lv2:symbol "vol1" ; lv2:name "Volume I" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ; lv2:symbol "vol2" ; lv2:name "Volume II" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ; lv2:symbol "treble" ; lv2:name "Treble" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ; lv2:symbol "mid" ; lv2:name "Middle" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ; lv2:symbol "bass" ; lv2:name "Bass" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ; lv2:symbol "presence" ; lv2:name "Presence" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] .
+
+<urn:davidian:ashgrove-cascade-lead> a lv2:Plugin , lv2:AmplifierPlugin ;
+    doap:name "Davidian Ashgrove Cascade Lead" ;
+    lv2:port
+    [ a lv2:InputPort , lv2:AudioPort ; lv2:index 0 ; lv2:symbol "in" ; lv2:name "In" ] ,
+    [ a lv2:OutputPort , lv2:AudioPort ; lv2:index 1 ; lv2:symbol "out" ; lv2:name "Out" ] ,
+    [ a lv2:OutputPort , lv2:ControlPort ; lv2:index 2 ; lv2:symbol "latency" ; lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency , lv2:integer ; lv2:minimum 0 ; lv2:maximum 1024 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ; lv2:symbol "model" ; lv2:name "Model" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 3.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "100W Head" ; rdf:value 0 ] , [ rdfs:label "100W Combo" ; rdf:value 1 ] , [ rdfs:label "50W Head" ; rdf:value 2 ] , [ rdfs:label "50W Combo" ; rdf:value 3 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ; lv2:symbol "tube" ; lv2:name "Output Tube" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 2.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "EL34" ; rdf:value 0 ] , [ rdfs:label "KT77" ; rdf:value 1 ] , [ rdfs:label "6550" ; rdf:value 2 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ; lv2:symbol "input" ; lv2:name "Input" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "High" ; rdf:value 0 ] , [ rdfs:label "Low" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ; lv2:symbol "oversampling" ; lv2:name "Oversampling" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "2x" ; rdf:value 0 ] , [ rdfs:label "4x" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ; lv2:symbol "trim" ; lv2:name "Input Trim (dB)" ;
+        lv2:default 0.0 ; lv2:minimum -36.0 ; lv2:maximum 36.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ; lv2:symbol "level" ; lv2:name "Output Level (dB)" ;
+        lv2:default -6.0 ; lv2:minimum -60.0 ; lv2:maximum 12.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ; lv2:symbol "preamp" ; lv2:name "Preamp Volume" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ; lv2:symbol "master" ; lv2:name "Master Volume" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ; lv2:symbol "treble" ; lv2:name "Treble" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ; lv2:symbol "mid" ; lv2:name "Middle" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ; lv2:symbol "bass" ; lv2:name "Bass" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ; lv2:symbol "presence" ; lv2:name "Presence" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] .
+
+<urn:davidian:ashgrove-low-end> a lv2:Plugin , lv2:AmplifierPlugin ;
+    doap:name "Davidian Ashgrove Low End" ;
+    lv2:port
+    [ a lv2:InputPort , lv2:AudioPort ; lv2:index 0 ; lv2:symbol "in" ; lv2:name "In" ] ,
+    [ a lv2:OutputPort , lv2:AudioPort ; lv2:index 1 ; lv2:symbol "out" ; lv2:name "Out" ] ,
+    [ a lv2:OutputPort , lv2:ControlPort ; lv2:index 2 ; lv2:symbol "latency" ; lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency , lv2:integer ; lv2:minimum 0 ; lv2:maximum 1024 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ; lv2:symbol "model" ; lv2:name "Model" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "50W" ; rdf:value 0 ] , [ rdfs:label "100W" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ; lv2:symbol "tube" ; lv2:name "Output Tube" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 2.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "EL34" ; rdf:value 0 ] , [ rdfs:label "KT77" ; rdf:value 1 ] , [ rdfs:label "6550" ; rdf:value 2 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ; lv2:symbol "input" ; lv2:name "Input" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "Top" ; rdf:value 0 ] , [ rdfs:label "Bottom" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ; lv2:symbol "oversampling" ; lv2:name "Oversampling" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "2x" ; rdf:value 0 ] , [ rdfs:label "4x" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ; lv2:symbol "trim" ; lv2:name "Input Trim (dB)" ;
+        lv2:default 0.0 ; lv2:minimum -36.0 ; lv2:maximum 36.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ; lv2:symbol "level" ; lv2:name "Output Level (dB)" ;
+        lv2:default -6.0 ; lv2:minimum -60.0 ; lv2:maximum 12.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ; lv2:symbol "volume" ; lv2:name "Volume" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ; lv2:symbol "treble" ; lv2:name "Treble" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ; lv2:symbol "mid" ; lv2:name "Middle" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ; lv2:symbol "sweep" ; lv2:name "Mid Sweep" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ; lv2:symbol "bass" ; lv2:name "Bass" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ; lv2:symbol "slope" ; lv2:name "Slope" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] .
+
+<urn:davidian:ashgrove-spring-combo> a lv2:Plugin , lv2:AmplifierPlugin ;
+    doap:name "Davidian Ashgrove Spring Combo" ;
+    lv2:port
+    [ a lv2:InputPort , lv2:AudioPort ; lv2:index 0 ; lv2:symbol "in" ; lv2:name "In" ] ,
+    [ a lv2:OutputPort , lv2:AudioPort ; lv2:index 1 ; lv2:symbol "out" ; lv2:name "Out" ] ,
+    [ a lv2:OutputPort , lv2:ControlPort ; lv2:index 2 ; lv2:symbol "latency" ; lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency , lv2:integer ; lv2:minimum 0 ; lv2:maximum 1024 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ; lv2:symbol "model" ; lv2:name "Model" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "2x12" ; rdf:value 0 ] , [ rdfs:label "4x10" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ; lv2:symbol "tube" ; lv2:name "Output Tube" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "KT77" ; rdf:value 0 ] , [ rdfs:label "6550" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ; lv2:symbol "input" ; lv2:name "Input" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 3.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "Channel I High" ; rdf:value 0 ] , [ rdfs:label "Channel I Low" ; rdf:value 1 ] , [ rdfs:label "Channel II High" ; rdf:value 2 ] , [ rdfs:label "Channel II Low" ; rdf:value 3 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ; lv2:symbol "oversampling" ; lv2:name "Oversampling" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "2x" ; rdf:value 0 ] , [ rdfs:label "4x" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ; lv2:symbol "trim" ; lv2:name "Input Trim (dB)" ;
+        lv2:default 0.0 ; lv2:minimum -36.0 ; lv2:maximum 36.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ; lv2:symbol "level" ; lv2:name "Output Level (dB)" ;
+        lv2:default -6.0 ; lv2:minimum -60.0 ; lv2:maximum 12.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ; lv2:symbol "vol1" ; lv2:name "I Volume" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ; lv2:symbol "bright" ; lv2:name "I Bright" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:toggled ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ; lv2:symbol "boost" ; lv2:name "I Boost" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:toggled ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ; lv2:symbol "treble1" ; lv2:name "I Treble" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ; lv2:symbol "mid1" ; lv2:name "I Middle" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ; lv2:symbol "bass1" ; lv2:name "I Bass" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 15 ; lv2:symbol "reverb" ; lv2:name "Reverb" ;
+        lv2:default 3.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 16 ; lv2:symbol "vol2" ; lv2:name "II Volume" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 17 ; lv2:symbol "treble2" ; lv2:name "II Treble" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 18 ; lv2:symbol "mid2" ; lv2:name "II Middle" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 19 ; lv2:symbol "bass2" ; lv2:name "II Bass" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 20 ; lv2:symbol "master" ; lv2:name "Master Volume" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] .
+
+<urn:davidian:ashgrove-dual-rail> a lv2:Plugin , lv2:AmplifierPlugin ;
+    doap:name "Davidian Ashgrove Dual Rail" ;
+    lv2:port
+    [ a lv2:InputPort , lv2:AudioPort ; lv2:index 0 ; lv2:symbol "in" ; lv2:name "In" ] ,
+    [ a lv2:OutputPort , lv2:AudioPort ; lv2:index 1 ; lv2:symbol "out" ; lv2:name "Out" ] ,
+    [ a lv2:OutputPort , lv2:ControlPort ; lv2:index 2 ; lv2:symbol "latency" ; lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency , lv2:integer ; lv2:minimum 0 ; lv2:maximum 1024 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ; lv2:symbol "model" ; lv2:name "Model" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 0.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "250W" ; rdf:value 0 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ; lv2:symbol "tube" ; lv2:name "Output Tube" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "6550" ; rdf:value 0 ] , [ rdfs:label "KT77" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ; lv2:symbol "input" ; lv2:name "Input" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "Channel I" ; rdf:value 0 ] , [ rdfs:label "Channel II" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ; lv2:symbol "oversampling" ; lv2:name "Oversampling" ;
+        lv2:default 0.0 ; lv2:minimum 0.0 ; lv2:maximum 1.0 ;
+        lv2:portProperty lv2:integer , lv2:enumeration ;
+        lv2:scalePoint [ rdfs:label "2x" ; rdf:value 0 ] , [ rdfs:label "4x" ; rdf:value 1 ] ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ; lv2:symbol "trim" ; lv2:name "Input Trim (dB)" ;
+        lv2:default 0.0 ; lv2:minimum -36.0 ; lv2:maximum 36.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ; lv2:symbol "level" ; lv2:name "Output Level (dB)" ;
+        lv2:default -6.0 ; lv2:minimum -60.0 ; lv2:maximum 12.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ; lv2:symbol "gain1" ; lv2:name "I Gain" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ; lv2:symbol "treble1" ; lv2:name "I Treble" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ; lv2:symbol "mid1" ; lv2:name "I Middle" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ; lv2:symbol "bass1" ; lv2:name "I Bass" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ; lv2:symbol "presence1" ; lv2:name "I Presence" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ; lv2:symbol "gain2" ; lv2:name "II Gain" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 15 ; lv2:symbol "treble2" ; lv2:name "II Treble" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 16 ; lv2:symbol "mid2" ; lv2:name "II Middle" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 17 ; lv2:symbol "sweep2" ; lv2:name "II Sweep" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 18 ; lv2:symbol "bass2" ; lv2:name "II Bass" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] ,
+    [ a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 19 ; lv2:symbol "volume2" ; lv2:name "II Volume" ;
+        lv2:default 5.0 ; lv2:minimum 0.0 ; lv2:maximum 10.0 ] .
+
