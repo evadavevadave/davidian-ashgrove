@@ -1,0 +1,17 @@
+# Build output (build.sh)
+/build/
+
+# Compiler and linker by-products
+*.obj
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.dll
+*.exe
+
+# Test renders
+*.bmp
+
+# Reference material is kept outside the repository
+/reference/
