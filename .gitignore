@@ -1,8 +1,6 @@
-# Build output (build.sh). Only the finished plugin bundle is kept.
-/build/*
-!/build/lv2/
-/build/lv2/*
-!/build/lv2/ashgrove.lv2/
+# Build output (build.sh, CMake)
+/build/
+/out/
 
 # Compiler and linker by-products
 *.obj
@@ -11,11 +9,13 @@
 *.pdb
 *.ilk
 *.dll
-!/build/lv2/ashgrove.lv2/*.dll
 *.exe
 
 # Test renders
 *.bmp
+
+# Ready-built bundles from the latest release are kept
+!/prebuilt/**
 
 # Reference material is kept outside the repository
 /reference/

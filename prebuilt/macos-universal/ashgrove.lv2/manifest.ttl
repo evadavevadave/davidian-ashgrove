@@ -1,0 +1,25 @@
+@prefix lv2: <http://lv2plug.in/ns/lv2core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+
+<urn:davidian:ashgrove-classic-lead> a lv2:Plugin ;
+    lv2:binary <ashgrove.dylib> ;
+    rdfs:seeAlso <ashgrove.ttl> .
+
+<urn:davidian:ashgrove-cascade-lead> a lv2:Plugin ;
+    lv2:binary <ashgrove.dylib> ;
+    rdfs:seeAlso <ashgrove.ttl> .
+
+<urn:davidian:ashgrove-low-end> a lv2:Plugin ;
+    lv2:binary <ashgrove.dylib> ;
+    rdfs:seeAlso <ashgrove.ttl> .
+
+<urn:davidian:ashgrove-spring-combo> a lv2:Plugin ;
+    lv2:binary <ashgrove.dylib> ;
+    rdfs:seeAlso <ashgrove.ttl> .
+
+<urn:davidian:ashgrove-dual-rail> a lv2:Plugin ;
+    lv2:binary <ashgrove.dylib> ;
+    rdfs:seeAlso <ashgrove.ttl> .
+
