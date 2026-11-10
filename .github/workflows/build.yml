@@ -30,7 +30,7 @@ jobs:
             name: linux-x64
             lib: ashgrove.so
             configure: -DCMAKE_BUILD_TYPE=Release
-          - os: macos-14
+          - os: macos-latest
             name: macos-universal
             lib: ashgrove.dylib
             configure: -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64;x86_64
