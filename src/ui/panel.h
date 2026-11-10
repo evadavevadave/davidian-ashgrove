@@ -53,6 +53,20 @@ static int w_index(const Panel* p, const Widget* w)
     return i < 0 ? 0 : (i >= w->nopts ? w->nopts - 1 : i);
 }
 
+/* Rows per column: all in one column, or split in two when colw is set. */
+static int sel_rows(const Widget* w)
+{
+    return w->colw > 0 ? (w->nopts + 1) / 2 : w->nopts;
+}
+
+/* Lamp centre of option i. */
+static void sel_pos(const Widget* w, int i, float* x, float* y)
+{
+    const int rows = sel_rows(w);
+    *x = w->x + (float)(i / rows) * w->colw;
+    *y = w->y + SELECT_ROW * (float)(i % rows);
+}
+
 static void w_format(const Panel* p, const Widget* w, char* buf, size_t n)
 {
     const float v = p->val[w->port];
@@ -125,9 +139,10 @@ static void draw_select_static(Canvas* c, const Widget* w)
 {
     int i;
     for (i = 0; i < w->nopts; ++i) {
-        const float y = w->y + SELECT_ROW * i;
-        cv_circle(c, w->x + 1, y + 1.5f, 7.5f, 0x000000, 0.5f);
-        cv_shaded_circle(c, w->x, y, 7.5f, 0xb9bcc3, 0x45484e, -0.4f, -0.6f, 1);
+        float x, y;
+        sel_pos(w, i, &x, &y);
+        cv_circle(c, x + 1, y + 1.5f, 7.5f, 0x000000, 0.5f);
+        cv_shaded_circle(c, x, y, 7.5f, 0xb9bcc3, 0x45484e, -0.4f, -0.6f, 1);
     }
 }
 
@@ -225,15 +240,16 @@ static void draw_select(Canvas* c, const Widget* w, int idx)
 {
     int i;
     for (i = 0; i < w->nopts; ++i) {
-        const float y = w->y + SELECT_ROW * i;
         const int on = i == idx;
+        float x, y;
+        sel_pos(w, i, &x, &y);
         if (on) {
-            cv_glow(c, w->x, y, 4, 16, COL_AMBER, 0.4f);
-            cv_shaded_circle(c, w->x, y, 5, 0xfff0d0, COL_AMBER, -0.3f, -0.4f, 1);
+            cv_glow(c, x, y, 4, 16, COL_AMBER, 0.4f);
+            cv_shaded_circle(c, x, y, 5, 0xfff0d0, COL_AMBER, -0.3f, -0.4f, 1);
         } else {
-            cv_circle(c, w->x, y, 5, 0x1e1206, 1);
+            cv_circle(c, x, y, 5, 0x1e1206, 1);
         }
-        text_draw(c, w->x + 16, y - 0.5f * TXT_SMALL - 0.5f, w->opts[i], 8, 1.8f, 1.3f, on ? COL_AMBER : COL_DIM, 1);
+        text_draw(c, x + 16, y - 0.5f * TXT_SMALL - 0.5f, w->opts[i], 8, 1.8f, 1.3f, on ? COL_AMBER : COL_DIM, 1);
     }
 }
 
@@ -359,7 +375,7 @@ static int hit(const Panel* p, float x, float y)
                 return i;
             break;
         case W_SELECT:
-            if (dx >= -12 && dx <= 130 && dy >= -0.5f * SELECT_ROW && dy <= SELECT_ROW * (w->nopts - 0.5f))
+            if (dx >= -12 && dx <= w->colw + 110 && dy >= -0.5f * SELECT_ROW && dy <= SELECT_ROW * (sel_rows(w) - 0.5f))
                 return i;
             break;
         }
@@ -391,7 +407,13 @@ static void panel_mouse_down(Panel* p, float x, float y, int dbl)
         set_value(p, i, y < w->y ? 1.0f : 0.0f);
         break;
     case W_SELECT:
-        set_value(p, i, floorf((y - w->y) / SELECT_ROW + 0.5f));
+        {
+            const int rows = sel_rows(w);
+            int row = (int)floorf((y - w->y) / SELECT_ROW + 0.5f);
+            const int col = w->colw > 0 && x - w->x >= w->colw - 12 ? 1 : 0;
+            row = row < 0 ? 0 : (row >= rows ? rows - 1 : row);
+            set_value(p, i, (float)(col * rows + row));
+        }
         break;
     }
 }

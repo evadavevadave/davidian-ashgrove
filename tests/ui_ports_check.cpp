@@ -4,6 +4,7 @@
 // panel, at the right port number, with the same default and range.
 #include <cmath>
 #include <cstdio>
+#include <cctype>
 #include <cstring>
 
 #include "ports.h"
@@ -36,7 +37,20 @@ int main() {
             if (!strcmp(LAYOUTS[i].plugin_uri, d.uri)) L = &LAYOUTS[i];
         check(L != nullptr, "has a layout", d.uri);
         if (!L) continue;
-        check(L->nports == PORT_FIRST_KNOB + int(d.ports.size()), "port count", d.uri);
+        check(L->nports == cabinetPort(d) + 1, "port count", d.uri);
+        {
+            const Widget* cab = find(*L, cabinetPort(d));
+            check(cab && !strcmp(cab->symbol, "cabinet") && cab->nopts == CAB_COUNT && int(cab->def) == d.cabDefault,
+                  "cabinet selector: port, size and default", d.uri);
+            for (int k = 0; cab && k < CAB_COUNT; ++k) {
+                char up[32];
+                const char* s = cabinetNames()[k];
+                size_t j = 0;
+                for (; s[j] && j + 1 < sizeof up; ++j) up[j] = char(toupper((unsigned char)s[j]));
+                up[j] = 0;
+                check(!strcmp(cab->opts[k], up), "cabinet names in order", d.uri);
+            }
+        }
         for (size_t k = 0; k < d.ports.size(); ++k) {
             const PortDef& pd = d.ports[k];
             const Widget* w = find(*L, PORT_FIRST_KNOB + int(k));

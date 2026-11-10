@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Davidian
 /* Panel layouts for the five plugins. Port numbers follow src/ports.h: fixed ports
  * 3-8 (model, tube, input, oversampling, input trim, output level), then each
- * plugin's knobs from 9 in table order. tests/ui_ports_check.cpp checks that these
+ * plugin's knobs from 9 in table order, then the cabinet selector. tests/ui_ports_check.cpp checks that these
  * tables agree with ports.h, so the two cannot drift apart.
  *
  * Each panel has its own original name (the "Ashgrove" series) and none of the
@@ -31,9 +31,10 @@ typedef struct {
     const char* name;   /* in the display */
     const char* lo;     /* scale end labels */
     const char* hi;
-    const char* opts[4];
+    const char* opts[6];
     int nopts;
     const char* symbol; /* the port's LV2 symbol, checked against ports.h */
+    float colw;         /* selectors: when > 0, the options wrap into two columns this far apart */
 } Widget;
 
 typedef struct {
@@ -73,12 +74,18 @@ typedef struct {
 
 /* The bottom row is the same on every panel; Y0 is its top edge. */
 #define SETUP_SECTIONS(Y0, INPUT_TITLE)                                                    \
-    { 16, Y0, 206, Y0 + 130, "MODEL" }, { 216, Y0, 386, Y0 + 130, "OUTPUT VALVES" },       \
-    { 396, Y0, 586, Y0 + 130, INPUT_TITLE }, { 596, Y0, 746, Y0 + 130, "OVERSAMPLING" },   \
-    { 756, Y0, 944, Y0 + 130, "LEVELS" }
-#define TUBES3(Y0) SELECT3(PORT_TUBE, "tube", 246, Y0 + 34, "OUTPUT VALVES", "EL34", "KT77", "6550")
-#define OVERSAMPLE(Y0) SELECT2(PORT_OVERSAMPLING, "oversampling", 626, Y0 + 34, "OVERSAMPLING", "2X", "4X")
-#define LEVELS(Y0) TRIM_IN(806, Y0 + 72), TRIM_OUT(896, Y0 + 72)
+    { 16, Y0, 146, Y0 + 130, "MODEL" }, { 156, Y0, 281, Y0 + 130, "OUTPUT VALVES" },       \
+    { 291, Y0, 411, Y0 + 130, INPUT_TITLE }, { 421, Y0, 541, Y0 + 130, "OVERSAMPLING" },   \
+    { 551, Y0, 761, Y0 + 130, "CABINET" }, { 771, Y0, 944, Y0 + 130, "LEVELS" }
+#define TUBES3(Y0) SELECT3(PORT_TUBE, "tube", 176, Y0 + 34, "OUTPUT VALVES", "EL34", "KT77", "6550")
+#define OVERSAMPLE(Y0) SELECT2(PORT_OVERSAMPLING, "oversampling", 451, Y0 + 34, "OVERSAMPLING", "2X", "4X")
+#define LEVELS(Y0) TRIM_IN(816, Y0 + 72), TRIM_OUT(900, Y0 + 72)
+/* Cabinet choices in Cab order (src/cabinet.h), two columns of three. The port comes
+ * after the plugin's knobs; def is the plugin's default cabinet. */
+#define CABINET(port, Y0, def)                                                           \
+    { W_SELECT, port, 571, Y0 + 34, 0, 0, 5, def, "", "CABINET", 0, 0,                     \
+      { "OFF", "4X12 VINTAGE", "4X12 MODERN", "2X12 OPEN", "4X10 BASS", "1X15 BASS" }, 6, \
+      "cabinet", 106 }
 
 /* ---- Classic Lead: CL100, CL50 ---- */
 
@@ -94,11 +101,12 @@ static const Widget STD_WIDGETS[] = {
     KNOB(12, "mid", 539, 148, 5, "MIDDLE", "MIDDLE"),
     KNOB(13, "bass", 701, 148, 5, "BASS", "BASS"),
     KNOB(14, "presence", 863, 148, 5, "PRESENCE", "PRESENCE"),
-    SELECT2(PORT_MODEL, "model", 46, 290, "MODEL", "100 WATT", "50 WATT"),
+    SELECT2(PORT_MODEL, "model", 36, 290, "MODEL", "100 WATT", "50 WATT"),
     TUBES3(256),
-    SELECT4(PORT_INPUT, "input", 426, 290, "INPUT", "I HIGH", "I LOW", "II HIGH", "II LOW"),
+    SELECT4(PORT_INPUT, "input", 311, 290, "INPUT", "I HIGH", "I LOW", "II HIGH", "II LOW"),
     OVERSAMPLE(256),
     LEVELS(256),
+    CABINET(15, 256, 1),
 };
 
 /* ---- Cascade Lead: CH100, CC100, CH50, CC50 ---- */
@@ -115,11 +123,12 @@ static const Widget MV_WIDGETS[] = {
     KNOB(12, "mid", 539, 148, 5, "MIDDLE", "MIDDLE"),
     KNOB(13, "bass", 701, 148, 5, "BASS", "BASS"),
     KNOB(14, "presence", 863, 148, 5, "PRESENCE", "PRESENCE"),
-    SELECT4(PORT_MODEL, "model", 46, 290, "MODEL", "100W HEAD", "100W COMBO", "50W HEAD", "50W COMBO"),
+    SELECT4(PORT_MODEL, "model", 36, 290, "MODEL", "100W HEAD", "100W COMBO", "50W HEAD", "50W COMBO"),
     TUBES3(256),
-    SELECT2(PORT_INPUT, "input", 426, 290, "INPUT", "HIGH", "LOW"),
+    SELECT2(PORT_INPUT, "input", 311, 290, "INPUT", "HIGH", "LOW"),
     OVERSAMPLE(256),
     LEVELS(256),
+    CABINET(15, 256, 1),
 };
 
 /* ---- Low End: LE50, LE100 ---- */
@@ -136,11 +145,12 @@ static const Widget BASS_WIDGETS[] = {
     KNOB(12, "sweep", 560, 148, 5, "SWEEP", "MID SWEEP"),
     KNOB(13, "bass", 714, 148, 5, "BASS", "BASS"),
     KNOB(14, "slope", 867, 148, 0, "SLOPE", "SLOPE"),
-    SELECT2(PORT_MODEL, "model", 46, 290, "MODEL", "50 WATT", "100 WATT"),
+    SELECT2(PORT_MODEL, "model", 36, 290, "MODEL", "50 WATT", "100 WATT"),
     TUBES3(256),
-    SELECT2(PORT_INPUT, "input", 426, 290, "INPUT", "TOP", "BOTTOM"),
+    SELECT2(PORT_INPUT, "input", 311, 290, "INPUT", "TOP", "BOTTOM"),
     OVERSAMPLE(256),
     LEVELS(256),
+    CABINET(15, 256, 4),
 };
 
 /* ---- Spring Combo: SC212, SC410 ---- */
@@ -165,11 +175,12 @@ static const Widget COMBO_WIDGETS[] = {
     KNOB(18, "mid2", 520, 324, 5, "MIDDLE", "CHANNEL II MIDDLE"),
     KNOB(19, "bass2", 650, 324, 5, "BASS", "CHANNEL II BASS"),
     KNOB(20, "master", 835, 324, 5, "MASTER", "MASTER VOLUME"),
-    SELECT2(PORT_MODEL, "model", 46, 466, "MODEL", "2 X 12", "4 X 10"),
-    SELECT2(PORT_TUBE, "tube", 246, 466, "OUTPUT VALVES", "KT77", "6550"),
-    SELECT4(PORT_INPUT, "input", 426, 466, "INPUT", "I HIGH", "I LOW", "II HIGH", "II LOW"),
+    SELECT2(PORT_MODEL, "model", 36, 466, "MODEL", "2 X 12", "4 X 10"),
+    SELECT2(PORT_TUBE, "tube", 176, 466, "OUTPUT VALVES", "KT77", "6550"),
+    SELECT4(PORT_INPUT, "input", 311, 466, "INPUT", "I HIGH", "I LOW", "II HIGH", "II LOW"),
     OVERSAMPLE(432),
     LEVELS(432),
+    CABINET(21, 432, 3),
 };
 
 /* ---- Dual Rail: DR250 ---- */
@@ -191,10 +202,11 @@ static const Widget DUAL_WIDGETS[] = {
     KNOB(17, "sweep2", 557, 324, 5, "SWEEP", "CHANNEL II MID SWEEP"),
     KNOB(18, "bass2", 712, 324, 5, "BASS", "CHANNEL II BASS"),
     KNOB(19, "volume2", 867, 324, 5, "VOLUME", "CHANNEL II VOLUME"),
-    SELECT2(PORT_TUBE, "tube", 246, 466, "OUTPUT VALVES", "6550", "KT77"),
-    SELECT2(PORT_INPUT, "input", 426, 466, "CHANNEL", "CHANNEL I", "CHANNEL II"),
+    SELECT2(PORT_TUBE, "tube", 176, 466, "OUTPUT VALVES", "6550", "KT77"),
+    SELECT2(PORT_INPUT, "input", 311, 466, "CHANNEL", "CHANNEL I", "CHANNEL II"),
     OVERSAMPLE(432),
     LEVELS(432),
+    CABINET(20, 432, 2),
 };
 
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
@@ -202,19 +214,19 @@ static const Widget DUAL_WIDGETS[] = {
 static const Layout LAYOUTS[] = {
     { "urn:davidian:ashgrove-classic-lead", "urn:davidian:ashgrove-classic-lead#ui", "DAVIDIAN ASHGROVE CLASSIC LEAD",
       "TWO-CHANNEL VALVE LEAD HEAD, 50 OR 100 WATT", "CLASSIC LEAD", 960, 402, STD_SECTIONS,
-      COUNT(STD_SECTIONS), STD_WIDGETS, COUNT(STD_WIDGETS), 15, { 0, 0 } },
+      COUNT(STD_SECTIONS), STD_WIDGETS, COUNT(STD_WIDGETS), 16, { 0, 0 } },
     { "urn:davidian:ashgrove-cascade-lead", "urn:davidian:ashgrove-cascade-lead#ui", "DAVIDIAN ASHGROVE CASCADE LEAD",
       "MASTER-VOLUME VALVE LEAD AMP, 50 OR 100 WATT", "CASCADE LEAD", 960, 402, MV_SECTIONS,
-      COUNT(MV_SECTIONS), MV_WIDGETS, COUNT(MV_WIDGETS), 15, { 0, 0 } },
+      COUNT(MV_SECTIONS), MV_WIDGETS, COUNT(MV_WIDGETS), 16, { 0, 0 } },
     { "urn:davidian:ashgrove-low-end", "urn:davidian:ashgrove-low-end#ui", "DAVIDIAN ASHGROVE LOW END",
       "VALVE BASS HEAD WITH SWEPT MIDDLE AND SLOPE", "LOW END", 960, 402, BASS_SECTIONS,
-      COUNT(BASS_SECTIONS), BASS_WIDGETS, COUNT(BASS_WIDGETS), 15, { 0, 0 } },
+      COUNT(BASS_SECTIONS), BASS_WIDGETS, COUNT(BASS_WIDGETS), 16, { 0, 0 } },
     { "urn:davidian:ashgrove-spring-combo", "urn:davidian:ashgrove-spring-combo#ui", "DAVIDIAN ASHGROVE SPRING COMBO",
       "TWO-CHANNEL 100 WATT VALVE COMBO WITH SPRING REVERB", "SPRING COMBO", 960, 578, COMBO_SECTIONS,
-      COUNT(COMBO_SECTIONS), COMBO_WIDGETS, COUNT(COMBO_WIDGETS), 21, { 0, 0 } },
+      COUNT(COMBO_SECTIONS), COMBO_WIDGETS, COUNT(COMBO_WIDGETS), 22, { 0, 0 } },
     { "urn:davidian:ashgrove-dual-rail", "urn:davidian:ashgrove-dual-rail#ui", "DAVIDIAN ASHGROVE DUAL RAIL",
       "RELAY-SWITCHED TWO-CHANNEL VALVE HEAD, 250 WATT", "DUAL RAIL", 960, 578, DUAL_SECTIONS,
-      COUNT(DUAL_SECTIONS), DUAL_WIDGETS, COUNT(DUAL_WIDGETS), 20, { "SIX-VALVE", "250 WATT" } },
+      COUNT(DUAL_SECTIONS), DUAL_WIDGETS, COUNT(DUAL_WIDGETS), 21, { "SIX-VALVE", "250 WATT" } },
 };
 #define N_LAYOUTS COUNT(LAYOUTS)
 

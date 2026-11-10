@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
 // LV2 entry points. Selector changes rebuild the circuit behind a short fade.
-#include <immintrin.h>
-
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -13,9 +11,45 @@
 #include "lv2_abi.h"
 #include "ports.h"
 
+#if defined(_M_X64) || defined(__x86_64__) || defined(__SSE__)
+#include <xmmintrin.h>
+#define AG_FTZ_X86 1
+#elif defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__))
+#define AG_FTZ_ARM64 1
+#endif
+
 using namespace ashgrove;
 
 namespace {
+
+// Flushes denormals to zero while the amp runs, so decaying filter states don't
+// slow the CPU down. Restores the host's setting afterwards.
+class DenormalGuard {
+public:
+    DenormalGuard() {
+#if defined(AG_FTZ_X86)
+        saved_ = _mm_getcsr();
+        _mm_setcsr(unsigned(saved_) | 0x8040u);  // FTZ and DAZ.
+#elif defined(AG_FTZ_ARM64)
+        unsigned long long r;
+        __asm__ __volatile__("mrs %0, fpcr" : "=r"(r));
+        saved_ = r;
+        r |= 1ull << 24;  // FZ.
+        __asm__ __volatile__("msr fpcr, %0" : : "r"(r));
+#endif
+    }
+    ~DenormalGuard() {
+#if defined(AG_FTZ_X86)
+        _mm_setcsr(unsigned(saved_));
+#elif defined(AG_FTZ_ARM64)
+        unsigned long long r = saved_;
+        __asm__ __volatile__("msr fpcr, %0" : : "r"(r));
+#endif
+    }
+
+private:
+    unsigned long long saved_ = 0;
+};
 
 struct Instance {
     const FamilyDef* def = nullptr;
@@ -30,8 +64,10 @@ struct Instance {
     float* quality = nullptr;
     float* trim = nullptr;
     float* level = nullptr;
+    float* cabinet = nullptr;
     std::vector<float*> knobs;
-    int curModel = -1, curTube = -1, curInput = -1, curQuality = 0;
+    Cabinet cab;
+    int curModel = -1, curTube = -1, curInput = -1, curQuality = 0, curCab = -1;
     double gain = 0.0;  // Fade gain around rebuilds.
     double trimG = 1.0, levelG = 0.5;
     std::vector<double> bufIn, bufOut;
@@ -82,6 +118,7 @@ LV2_Handle instantiate(const LV2_Descriptor* d, double rate, const char*, const 
     s->fs = rate;
     s->amp = std::make_unique<Amp>();
     s->amp->init(rate, 2);
+    s->cab.init(rate);
     s->knobs.assign(s->def->ports.size(), nullptr);
     s->bufIn.resize(kBlock);
     s->bufOut.resize(kBlock);
@@ -102,31 +139,38 @@ void connect(LV2_Handle h, uint32_t port, void* data) {
         case 7: s.trim = f; break;
         case 8: s.level = f; break;
         default:
-            if (port - PORT_FIRST_KNOB < s.knobs.size()) s.knobs[port - PORT_FIRST_KNOB] = f;
+            if (port - PORT_FIRST_KNOB < s.knobs.size())
+                s.knobs[port - PORT_FIRST_KNOB] = f;
+            else if (int(port) == cabinetPort(*s.def))
+                s.cabinet = f;
     }
 }
 
 void activate(LV2_Handle h) {
     Instance& s = *static_cast<Instance*>(h);
     s.curModel = -1;
+    s.curCab = -1;
     s.gain = 0.0;
 }
 
 void run(LV2_Handle h, uint32_t count) {
     Instance& s = *static_cast<Instance*>(h);
-    const unsigned csr = _mm_getcsr();
-    _mm_setcsr(csr | 0x8040);  // Flush denormals.
+    DenormalGuard ftz;
 
     const int nModels = countOf(s.def->models, 5), nInputs = countOf(s.def->inputs, 5);
     const int m = s.model ? clampIndex(*s.model, nModels) : 0;
     const int t = s.tube ? clampIndex(*s.tube, s.def->nTubes) : 0;
     const int i = s.input ? clampIndex(*s.input, nInputs) : 0;
     const int q = s.quality ? clampIndex(*s.quality, 2) : 0;
+    const int cb = s.cabinet ? clampIndex(*s.cabinet, CAB_COUNT) : s.def->cabDefault;
     if (s.curModel < 0) {  // First run after activate: nothing to fade out yet.
         readKnobs(s);
         rebuild(s, m, t, i, q);
+        s.cab.set(cb);
+        s.curCab = cb;
     }
-    const bool change = m != s.curModel || t != s.curTube || i != s.curInput || q != s.curQuality;
+    const bool ampChange = m != s.curModel || t != s.curTube || i != s.curInput || q != s.curQuality;
+    const bool change = ampChange || cb != s.curCab;
     const double target = std::pow(10.0, (s.trim ? *s.trim : 0.0f) / 20.0);
     const double targetL = std::pow(10.0, (s.level ? *s.level : 0.0f) / 20.0);
     const double step = 1.0 / (kFade * s.fs);
@@ -146,14 +190,19 @@ void run(LV2_Handle h, uint32_t count) {
         for (int k = 0; k < n; ++k) {
             s.levelG += 0.002 * (targetL - s.levelG);
             s.gain = std::min(1.0, std::max(0.0, s.gain + (change ? -step : step)));
-            s.out[done + k] = float(s.bufOut[k] / rated * s.levelG * s.gain);
+            s.out[done + k] = float(s.cab.process(s.bufOut[k] / rated) * s.levelG * s.gain);
         }
         done += n;
     }
     // Rebuild once faded out; the fade-in then runs on the next blocks.
-    if (change && s.gain <= 0.0) rebuild(s, m, t, i, q);
+    if (change && s.gain <= 0.0) {
+        if (ampChange) rebuild(s, m, t, i, q);
+        if (cb != s.curCab) {
+            s.cab.set(cb);
+            s.curCab = cb;
+        }
+    }
     if (s.latency) *s.latency = float(s.amp->latency());
-    _mm_setcsr(csr);
 }
 
 void deactivate(LV2_Handle) {}

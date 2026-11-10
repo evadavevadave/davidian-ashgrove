@@ -192,6 +192,23 @@ int main(int argc, char** argv)
         snprintf(label, sizeof label, "clicking the last %s row selects %s", sel->name, sel->opts[sel->nopts - 1]);
         check(label, last_port == sel->port && last_value == (float)(sel->nopts - 1));
 
+        /* The cabinet selector wraps into two columns; click every option. */
+        {
+            const Widget* cab = NULL;
+            int k, ok = 1;
+            for (k = 0; k < L->nwidgets; ++k)
+                if (!strcmp(L->widgets[k].symbol, "cabinet"))
+                    cab = &L->widgets[k];
+            check("panel has a cabinet selector", cab != NULL);
+            for (k = 0; cab && k < cab->nopts; ++k) {
+                const int rows = (cab->nopts + 1) / 2;
+                click(child, cab->x + 20 + (float)(k / rows) * cab->colw, cab->y + 20.0f * (float)(k % rows));
+                if (last_port != cab->port || last_value != (float)k)
+                    ok = 0;
+            }
+            check("clicking each cabinet option selects it", cab && ok);
+        }
+
         trim = first_of(L, W_TRIM);
         {
             POINT pt;

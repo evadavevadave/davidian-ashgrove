@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
 // Writes manifest.ttl and ashgrove.ttl for the bundle from the port tables.
+// Usage: gen_ttl <bundle dir> <library suffix> <ui class>
+//   library suffix: .dll, .so or .dylib
+//   ui class: WindowsUI, X11UI, or none (no GUI in this build)
 #include <cstdio>
+#include <cstring>
 #include <string>
 
 #include "ports.h"
@@ -24,6 +28,9 @@ static void control(FILE* f, int& idx, const char* sym, const char* name, double
 
 int main(int argc, char** argv) {
     const std::string dir = argc > 1 ? argv[1] : ".";
+    const std::string ext = argc > 2 ? argv[2] : ".dll";
+    const std::string ui = argc > 3 ? argv[3] : "WindowsUI";
+    const bool hasUi = ui != "none";
     FILE* m = fopen((dir + "/manifest.ttl").c_str(), "w");
     FILE* t = fopen((dir + "/ashgrove.ttl").c_str(), "w");
     if (!m || !t) return 1;
@@ -36,17 +43,22 @@ int main(int argc, char** argv) {
     fputs(pre, t);
     for (int i = 0; i < F_COUNT; ++i) {
         const FamilyDef& d = families()[i];
-        fprintf(m, "<%s> a lv2:Plugin ;\n    lv2:binary <ashgrove.dll> ;\n    rdfs:seeAlso <ashgrove.ttl> ;\n"
-                   "    <http://lv2plug.in/ns/extensions/ui#ui> <%s#ui> .\n\n", d.uri, d.uri);
-        // The native GUI (src/ui), one UI per plugin, all in ashgrove_ui.dll.
-        fprintf(m,
-                "<%s#ui> a <http://lv2plug.in/ns/extensions/ui#WindowsUI> ;\n"
-                "    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui.dll> ;\n"
-                "    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;\n"
-                "    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,\n"
-                "        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;\n"
-                "    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .\n\n",
-                d.uri);
+        fprintf(m, "<%s> a lv2:Plugin ;\n    lv2:binary <ashgrove%s> ;\n    rdfs:seeAlso <ashgrove.ttl>", d.uri,
+                ext.c_str());
+        if (hasUi) {
+            fprintf(m, " ;\n    <http://lv2plug.in/ns/extensions/ui#ui> <%s#ui> .\n\n", d.uri);
+            // The native GUI (src/ui), one UI per plugin, all in one library.
+            fprintf(m,
+                    "<%s#ui> a <http://lv2plug.in/ns/extensions/ui#%s> ;\n"
+                    "    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui%s> ;\n"
+                    "    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;\n"
+                    "    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,\n"
+                    "        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;\n"
+                    "    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .\n\n",
+                    d.uri, ui.c_str(), ext.c_str());
+        } else {
+            fputs(" .\n\n", m);
+        }
         fprintf(t, "<%s> a lv2:Plugin , lv2:AmplifierPlugin ;\n    doap:name \"%s\" ;\n    lv2:port\n", d.uri, d.name);
         int idx = 0;
         fprintf(t, "    [ a lv2:InputPort , lv2:AudioPort ; lv2:index %d ; lv2:symbol \"in\" ; lv2:name \"In\" ] ,\n", idx++);
@@ -87,7 +99,11 @@ int main(int argc, char** argv) {
                 fputs(" ]", t);
             }
         }
-        fputs(" .\n\n", t);
+        if (idx != cabinetPort(d)) return 2;
+        fputs(" ,\n", t);
+        control(t, idx, "cabinet", "Cabinet", d.cabDefault, 0, CAB_COUNT - 1);
+        scale(t, cabinetNames(), CAB_COUNT);
+        fputs(" ] .\n\n", t);
     }
     fclose(m);
     fclose(t);

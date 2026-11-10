@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
-/* LV2 GUI for the five amplifier plugins: the LV2 UI entry points plus a thin Win32
- * window layer (ui:WindowsUI). Everything else is in panel.h. The UI ABI is declared
- * here so no LV2 SDK is needed. */
+/* LV2 GUI for the five amplifier plugins: the LV2 UI entry points plus a thin window
+ * layer for Win32 (ui:WindowsUI) and X11 (ui:X11UI). Everything else is in panel.h,
+ * which has no platform code. The UI ABI is declared here so no LV2 SDK is needed.
+ * macOS builds ship without this GUI; hosts show their own controls there. */
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,9 +41,10 @@ typedef struct {
 #define LV2_UI__resize        "http://lv2plug.in/ns/extensions/ui#resize"
 #define LV2_UI__idleInterface "http://lv2plug.in/ns/extensions/ui#idleInterface"
 
-#if !defined(_WIN32)
-#    error "Only the Windows window layer is written so far."
-#endif
+#define DOUBLE_CLICK_MS 350
+
+/* ---- Window layer: Win32 ---- */
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <windowsx.h>
@@ -187,6 +189,149 @@ static void window_close(UI* ui)
     }
 }
 
+static void* window_widget(UI* ui) { return (void*)ui->hwnd; }
+
+/* The window's own timer drives redraws, so idle only flushes pending ones. */
+static int window_idle(UI* ui)
+{
+    ui_redraw(ui);
+    return 0;
+}
+
+/* ---- Window layer: X11 ---- */
+#elif defined(__unix__) && !defined(__APPLE__)
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+typedef struct {
+    Panel panel;
+    LV2UI_Write_Function write;
+    LV2UI_Controller controller;
+    Display* dpy;
+    Window win;
+    GC gc;
+    XImage* img;
+    Time last_click;
+    int last_x, last_y;
+} UI;
+
+static int window_open(UI* ui, void* parent)
+{
+    const Layout* L = ui->panel.L;
+    XSetWindowAttributes a;
+    Visual* vis;
+    int screen, depth;
+    Window root;
+    ui->dpy = XOpenDisplay(NULL);
+    if (!ui->dpy)
+        return 0;
+    screen = DefaultScreen(ui->dpy);
+    vis = DefaultVisual(ui->dpy, screen);
+    depth = DefaultDepth(ui->dpy, screen);
+    if (depth < 24 || vis->red_mask != 0xff0000 || vis->blue_mask != 0xff) {
+        XCloseDisplay(ui->dpy); /* this simple layer needs a standard 24/32-bit RGB visual */
+        ui->dpy = NULL;
+        return 0;
+    }
+    root = parent ? (Window)(uintptr_t)parent : RootWindow(ui->dpy, screen);
+    memset(&a, 0, sizeof a);
+    a.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask;
+    a.background_pixel = 0;
+    ui->win = XCreateWindow(ui->dpy, root, 0, 0, (unsigned)L->w, (unsigned)L->h, 0, depth, InputOutput, vis,
+                            CWEventMask | CWBackPixel, &a);
+    ui->gc = XCreateGC(ui->dpy, ui->win, 0, NULL);
+    ui->img = XCreateImage(ui->dpy, vis, (unsigned)depth, ZPixmap, 0, (char*)ui->panel.px, (unsigned)L->w,
+                           (unsigned)L->h, 32, 0);
+    if (!ui->img) {
+        XFreeGC(ui->dpy, ui->gc);
+        XDestroyWindow(ui->dpy, ui->win);
+        XCloseDisplay(ui->dpy);
+        ui->dpy = NULL;
+        return 0;
+    }
+    XStoreName(ui->dpy, ui->win, L->title);
+    XMapRaised(ui->dpy, ui->win);
+    XFlush(ui->dpy);
+    return 1;
+}
+
+static void window_close(UI* ui)
+{
+    if (!ui->dpy)
+        return;
+    ui->img->data = NULL; /* the panel owns the pixels */
+    XDestroyImage(ui->img);
+    XFreeGC(ui->dpy, ui->gc);
+    XDestroyWindow(ui->dpy, ui->win);
+    XCloseDisplay(ui->dpy);
+    ui->dpy = NULL;
+}
+
+static void* window_widget(UI* ui) { return (void*)(uintptr_t)ui->win; }
+
+static void blit(UI* ui)
+{
+    const Layout* L = ui->panel.L;
+    XPutImage(ui->dpy, ui->win, ui->gc, ui->img, 0, 0, 0, 0, (unsigned)L->w, (unsigned)L->h);
+    XFlush(ui->dpy);
+}
+
+static void ui_redraw(UI* ui)
+{
+    if (ui->panel.dirty && ui->dpy) {
+        panel_draw(&ui->panel);
+        blit(ui);
+    }
+}
+
+/* The host calls this regularly; it handles the window's events and redraws. */
+static int window_idle(UI* ui)
+{
+    if (!ui->dpy)
+        return 1;
+    while (XPending(ui->dpy)) {
+        XEvent e;
+        XNextEvent(ui->dpy, &e);
+        switch (e.type) {
+        case Expose:
+            if (e.xexpose.count == 0) {
+                if (ui->panel.dirty)
+                    panel_draw(&ui->panel);
+                blit(ui);
+            }
+            break;
+        case ButtonPress:
+            if (e.xbutton.button == 1) {
+                const int dbl = e.xbutton.time - ui->last_click < DOUBLE_CLICK_MS
+                                && abs(e.xbutton.x - ui->last_x) < 4 && abs(e.xbutton.y - ui->last_y) < 4;
+                panel_mouse_down(&ui->panel, (float)e.xbutton.x, (float)e.xbutton.y, dbl);
+                ui->last_click = dbl ? 0 : e.xbutton.time;
+                ui->last_x = e.xbutton.x;
+                ui->last_y = e.xbutton.y;
+            } else if (e.xbutton.button == 4 || e.xbutton.button == 5) {
+                panel_wheel(&ui->panel, (float)e.xbutton.x, (float)e.xbutton.y,
+                            e.xbutton.button == 4 ? 1.0f : -1.0f, (e.xbutton.state & ShiftMask) != 0);
+            }
+            break;
+        case MotionNotify:
+            panel_mouse_move(&ui->panel, (float)e.xmotion.x, (float)e.xmotion.y, (e.xmotion.state & ShiftMask) != 0);
+            break;
+        case ButtonRelease:
+            if (e.xbutton.button == 1)
+                panel_mouse_up(&ui->panel);
+            break;
+        default:
+            break;
+        }
+    }
+    ui_redraw(ui);
+    return 0;
+}
+
+#else
+#error "No window layer for this platform (Win32 and X11 are supported; macOS builds have no GUI)."
+#endif
+
 /* ---- LV2 UI entry points ---- */
 
 static void host_write(void* host, int port, float value)
@@ -232,7 +377,7 @@ static LV2UI_Handle instantiate(const LV2UI_Descriptor* descriptor, const char* 
     }
     if (resize)
         resize->ui_resize(resize->handle, L->w, L->h);
-    *widget = (void*)ui->hwnd;
+    *widget = window_widget(ui);
     return ui;
 }
 
@@ -253,12 +398,7 @@ static void port_event(LV2UI_Handle h, uint32_t port, uint32_t size, uint32_t fo
     ui_redraw(ui);
 }
 
-/* The window's own timer drives redraws, so idle only flushes pending ones. */
-static int idle(LV2UI_Handle h)
-{
-    ui_redraw((UI*)h);
-    return 0;
-}
+static int idle(LV2UI_Handle h) { return window_idle((UI*)h); }
 
 static const LV2UI_Idle_Interface idle_iface = { idle };
 

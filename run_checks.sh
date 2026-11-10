@@ -12,5 +12,7 @@ tail -n 40 build/host_results.txt
 echo "spec_test exit=$?"
 grep -vE '^(CC100|CC50|SC410) ' build/spec_results.txt
 ./build/Release/ui_ports_check.exe
+./build/Release/cab_check.exe | tail -1
+./build/Release/plugin_check.exe build/lv2/ashgrove.lv2/ashgrove.dll | tail -1
 ./build/Release/ui_check.exe "$(cygpath -w build/lv2/ashgrove.lv2)" | tail -2
 mkdir -p build/ui && ./build/Release/ui_render.exe build/ui
