@@ -33,7 +33,7 @@ jobs:
           - os: macos-latest
             name: macos-universal
             lib: ashgrove.dylib
-            configure: -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64;x86_64
+            configure: '-DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
