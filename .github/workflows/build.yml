@@ -2,13 +2,13 @@
 # Copyright (C) 2026 Davidian
 #
 # Builds and tests the ashgrove.lv2 bundle on Windows, Linux and macOS.
-# Every push uploads the three bundles as workflow artifacts. Pushing a tag such as
+# Every branch push uploads the three bundles as workflow artifacts. Pushing a tag such as
 # v1.1.0 also publishes them as a GitHub release.
 name: Build
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
