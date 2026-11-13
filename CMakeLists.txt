@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Davidian
 #
-# Builds the ashgrove.lv2 bundle on Windows (MSVC), Linux (GCC or Clang) and macOS
-# (Apple Clang). The bundle lands in <build>/lv2/ashgrove.lv2.
+# Builds the plugins on Windows (MSVC), Linux (GCC or Clang) and macOS (Apple Clang):
+# the LV2 bundle in <build>/lv2/ashgrove.lv2, and CLAP, VST3 and (macOS) AU plugins
+# in <build>/plugins. LV2 GUI:
 #   Windows: plugin + Win32 GUI (ui:WindowsUI)
 #   Linux:   plugin + X11 GUI (ui:X11UI)
 #   macOS:   plugin only; hosts show their own controls
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Oldest macOS the bundle runs on")
 endif()
-project(ashgrove_lv2 VERSION 1.1.0 LANGUAGES C CXX)
+project(ashgrove VERSION 1.2.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -74,11 +75,11 @@ add_dependencies(ashgrove gen_ttl)
 
 # The GUI: plain C, drawn by its own software renderer into a native window.
 if(WIN32)
-  add_library(ashgrove_ui MODULE src/ui/ui_lv2.c)
+  add_library(ashgrove_ui MODULE src/ui/ui_lv2.c src/ui/ui_window.c)
   target_link_libraries(ashgrove_ui user32 gdi32)
 elseif(NOT APPLE)
   find_package(X11 REQUIRED)
-  add_library(ashgrove_ui MODULE src/ui/ui_lv2.c)
+  add_library(ashgrove_ui MODULE src/ui/ui_lv2.c src/ui/ui_window.c)
   target_include_directories(ashgrove_ui PRIVATE ${X11_INCLUDE_DIR})
   target_link_libraries(ashgrove_ui ${X11_LIBRARIES} m)
 endif()
@@ -111,3 +112,49 @@ endif()
 # Loads the built plugin library directly and runs every plugin and cabinet.
 add_executable(plugin_check tests/plugin_check.cpp)
 target_link_libraries(plugin_check ampcore ${CMAKE_DL_LIBS})
+
+# ---- CLAP, VST3 and AU ----
+# One CLAP implementation (src/clap) is built as CLAP, VST3 and, on macOS, AUv2 by
+# clap-wrapper. Configuring downloads clap-wrapper and the CLAP, VST3 and AudioUnit
+# SDKs from GitHub at the pinned versions; turn this off to build LV2 only.
+option(AG_PLUGIN_FORMATS "Build CLAP, VST3 and AU plugins (downloads their SDKs)" ON)
+if(AG_PLUGIN_FORMATS)
+  set(CLAP_WRAPPER_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "" FORCE)
+  include(FetchContent)
+  FetchContent_Declare(clap-wrapper
+    GIT_REPOSITORY https://github.com/free-audio/clap-wrapper.git
+    GIT_TAG 806bba0a5f792e3966b99c1561ab9952d3316d7c)  # 0.17.0
+  FetchContent_MakeAvailable(clap-wrapper)
+
+  add_library(ashgrove_clap_impl STATIC src/clap/ashgrove_clap.cpp src/ui/ui_window.c)
+  set_target_properties(ashgrove_clap_impl PROPERTIES C_STANDARD 11 POSITION_INDEPENDENT_CODE ON)
+  target_link_libraries(ashgrove_clap_impl PUBLIC ampcore clap clap-wrapper-extensions)
+  if(WIN32)
+    target_link_libraries(ashgrove_clap_impl PUBLIC user32 gdi32)
+  elseif(NOT APPLE)
+    target_include_directories(ashgrove_clap_impl PRIVATE ${X11_INCLUDE_DIR})
+    target_link_libraries(ashgrove_clap_impl PUBLIC ${X11_LIBRARIES} m)
+  endif()
+
+  make_clapfirst_plugins(
+    TARGET_NAME ashgrove_formats
+    IMPL_TARGET ashgrove_clap_impl
+    OUTPUT_NAME "Davidian Ashgrove"
+    ENTRY_SOURCE src/clap/entry.cpp
+    BUNDLE_IDENTIFIER "com.davidian.ashgrove"
+    BUNDLE_VERSION ${PROJECT_VERSION}
+    COPY_AFTER_BUILD FALSE
+    WINDOWS_FOLDER_VST3 TRUE
+    PLUGIN_FORMATS CLAP VST3 AUV2
+    ASSET_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    foreach(t ashgrove_formats_clap ashgrove_formats_vst3)
+      target_link_options(${t} PRIVATE -static-libstdc++ -static-libgcc)
+    endforeach()
+  endif()
+
+  # Loads the built .clap and runs every plugin through the CLAP interface.
+  add_executable(clap_check tests/clap_check.cpp)
+  target_link_libraries(clap_check ampcore clap ${CMAKE_DL_LIBS})
+endif()

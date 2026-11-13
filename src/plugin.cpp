@@ -1,208 +1,50 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
-// LV2 entry points. Selector changes rebuild the circuit behind a short fade.
-#include <algorithm>
-#include <cmath>
+// LV2 entry points. The amp itself is in engine.h, shared with the other formats.
 #include <memory>
 #include <string_view>
 #include <vector>
 
-#include "amp.h"
+#include "engine.h"
 #include "lv2_abi.h"
-#include "ports.h"
-
-#if defined(_M_X64) || defined(__x86_64__) || defined(__SSE__)
-#include <xmmintrin.h>
-#define AG_FTZ_X86 1
-#elif defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__))
-#define AG_FTZ_ARM64 1
-#endif
 
 using namespace ashgrove;
 
 namespace {
 
-// Flushes denormals to zero while the amp runs, so decaying filter states don't
-// slow the CPU down. Restores the host's setting afterwards.
-class DenormalGuard {
-public:
-    DenormalGuard() {
-#if defined(AG_FTZ_X86)
-        saved_ = _mm_getcsr();
-        _mm_setcsr(unsigned(saved_) | 0x8040u);  // FTZ and DAZ.
-#elif defined(AG_FTZ_ARM64)
-        unsigned long long r;
-        __asm__ __volatile__("mrs %0, fpcr" : "=r"(r));
-        saved_ = r;
-        r |= 1ull << 24;  // FZ.
-        __asm__ __volatile__("msr fpcr, %0" : : "r"(r));
-#endif
-    }
-    ~DenormalGuard() {
-#if defined(AG_FTZ_X86)
-        _mm_setcsr(unsigned(saved_));
-#elif defined(AG_FTZ_ARM64)
-        unsigned long long r = saved_;
-        __asm__ __volatile__("msr fpcr, %0" : : "r"(r));
-#endif
-    }
-
-private:
-    unsigned long long saved_ = 0;
-};
-
 struct Instance {
-    const FamilyDef* def = nullptr;
-    double fs = 48000.0;
-    std::unique_ptr<Amp> amp;
-    float* in = nullptr;
-    float* out = nullptr;
-    float* latency = nullptr;
-    float* model = nullptr;
-    float* tube = nullptr;
-    float* input = nullptr;
-    float* quality = nullptr;
-    float* trim = nullptr;
-    float* level = nullptr;
-    float* cabinet = nullptr;
-    std::vector<float*> knobs;
-    Cabinet cab;
-    int curModel = -1, curTube = -1, curInput = -1, curQuality = 0, curCab = -1;
-    double gain = 0.0;  // Fade gain around rebuilds.
-    double trimG = 1.0, levelG = 0.5;
-    std::vector<double> bufIn, bufOut;
+    Engine engine;
+    std::vector<float*> ports;  // Indexed by port number.
+    std::vector<float> ctl;     // Control values passed to the engine.
 };
-
-const int kBlock = 128;
-const double kFade = 0.005;
-
-int clampIndex(float v, int n) {
-    const int i = int(v + 0.5f);
-    return i < 0 ? 0 : (i >= n ? n - 1 : i);
-}
-
-int countOf(const char* const* list, int cap) {
-    int n = 0;
-    while (n < cap && list[n]) ++n;
-    return n;
-}
-
-void rebuild(Instance& s, int m, int t, int i, int q) {
-    if (q != s.curQuality) s.amp->init(s.fs, q == 0 ? 2 : 4);
-    Config c;
-    c.family = s.def->family;
-    c.model = m;
-    c.tube = s.def->tubes[t];
-    c.input = i;
-    s.amp->configure(c);
-    s.curModel = m;
-    s.curTube = t;
-    s.curInput = i;
-    s.curQuality = q;
-}
-
-void readKnobs(Instance& s) {
-    for (size_t k = 0; k < s.knobs.size(); ++k) {
-        if (!s.knobs[k]) continue;
-        const PortDef& p = s.def->ports[k];
-        const double v = *s.knobs[k];
-        s.amp->setParam(p.param, p.kind == PK_TOGGLE ? (v > 0.5 ? 1.0 : 0.0) : v / 10.0);
-    }
-}
 
 LV2_Handle instantiate(const LV2_Descriptor* d, double rate, const char*, const LV2_Feature* const*) {
-    auto s = std::make_unique<Instance>();
+    const FamilyDef* def = nullptr;
     for (int f = 0; f < F_COUNT; ++f)
-        if (std::string_view(families()[f].uri) == d->URI) s->def = &families()[f];
-    if (!s->def) return nullptr;
-    s->fs = rate;
-    s->amp = std::make_unique<Amp>();
-    s->amp->init(rate, 2);
-    s->cab.init(rate);
-    s->knobs.assign(s->def->ports.size(), nullptr);
-    s->bufIn.resize(kBlock);
-    s->bufOut.resize(kBlock);
+        if (std::string_view(families()[f].uri) == d->URI) def = &families()[f];
+    if (!def) return nullptr;
+    auto s = std::make_unique<Instance>();
+    s->engine.init(def, rate);
+    s->ports.assign(size_t(portCount(*def)), nullptr);
+    s->ctl.resize(size_t(portCount(*def)));
+    Engine::defaults(*def, s->ctl.data());
     return s.release();
 }
 
 void connect(LV2_Handle h, uint32_t port, void* data) {
     Instance& s = *static_cast<Instance*>(h);
-    float* f = static_cast<float*>(data);
-    switch (port) {
-        case 0: s.in = f; break;
-        case 1: s.out = f; break;
-        case 2: s.latency = f; break;
-        case 3: s.model = f; break;
-        case 4: s.tube = f; break;
-        case 5: s.input = f; break;
-        case 6: s.quality = f; break;
-        case 7: s.trim = f; break;
-        case 8: s.level = f; break;
-        default:
-            if (port - PORT_FIRST_KNOB < s.knobs.size())
-                s.knobs[port - PORT_FIRST_KNOB] = f;
-            else if (int(port) == cabinetPort(*s.def))
-                s.cabinet = f;
-    }
+    if (port < s.ports.size()) s.ports[port] = static_cast<float*>(data);
 }
 
-void activate(LV2_Handle h) {
-    Instance& s = *static_cast<Instance*>(h);
-    s.curModel = -1;
-    s.curCab = -1;
-    s.gain = 0.0;
-}
+void activate(LV2_Handle h) { static_cast<Instance*>(h)->engine.reset(); }
 
 void run(LV2_Handle h, uint32_t count) {
     Instance& s = *static_cast<Instance*>(h);
-    DenormalGuard ftz;
-
-    const int nModels = countOf(s.def->models, 5), nInputs = countOf(s.def->inputs, 5);
-    const int m = s.model ? clampIndex(*s.model, nModels) : 0;
-    const int t = s.tube ? clampIndex(*s.tube, s.def->nTubes) : 0;
-    const int i = s.input ? clampIndex(*s.input, nInputs) : 0;
-    const int q = s.quality ? clampIndex(*s.quality, 2) : 0;
-    const int cb = s.cabinet ? clampIndex(*s.cabinet, CAB_COUNT) : s.def->cabDefault;
-    if (s.curModel < 0) {  // First run after activate: nothing to fade out yet.
-        readKnobs(s);
-        rebuild(s, m, t, i, q);
-        s.cab.set(cb);
-        s.curCab = cb;
-    }
-    const bool ampChange = m != s.curModel || t != s.curTube || i != s.curInput || q != s.curQuality;
-    const bool change = ampChange || cb != s.curCab;
-    const double target = std::pow(10.0, (s.trim ? *s.trim : 0.0f) / 20.0);
-    const double targetL = std::pow(10.0, (s.level ? *s.level : 0.0f) / 20.0);
-    const double step = 1.0 / (kFade * s.fs);
-    // Digital full scale corresponds to the model's rated power into its load.
-    const double rated = std::sqrt(2.0 * s.amp->power().ratedWatts * s.amp->power().loadOhms);
-
-    uint32_t done = 0;
-    while (done < count) {
-        const int n = int(std::min<uint32_t>(count - done, kBlock));
-        readKnobs(s);
-        s.amp->applyControls();
-        for (int k = 0; k < n; ++k) {
-            s.trimG += 0.002 * (target - s.trimG);
-            s.bufIn[k] = s.in[done + k] * s.trimG;
-        }
-        s.amp->process(s.bufIn.data(), s.bufOut.data(), n);
-        for (int k = 0; k < n; ++k) {
-            s.levelG += 0.002 * (targetL - s.levelG);
-            s.gain = std::min(1.0, std::max(0.0, s.gain + (change ? -step : step)));
-            s.out[done + k] = float(s.cab.process(s.bufOut[k] / rated) * s.levelG * s.gain);
-        }
-        done += n;
-    }
-    // Rebuild once faded out; the fade-in then runs on the next blocks.
-    if (change && s.gain <= 0.0) {
-        if (ampChange) rebuild(s, m, t, i, q);
-        if (cb != s.curCab) {
-            s.cab.set(cb);
-            s.curCab = cb;
-        }
-    }
-    if (s.latency) *s.latency = float(s.amp->latency());
+    // Unconnected controls keep their defaults.
+    for (size_t p = PORT_MODEL; p < s.ports.size(); ++p)
+        if (s.ports[p]) s.ctl[p] = *s.ports[p];
+    s.engine.run(s.ports[PORT_IN], s.ports[PORT_OUT], count, s.ctl.data());
+    if (s.ports[PORT_LATENCY]) *s.ports[PORT_LATENCY] = float(s.engine.latency());
 }
 
 void deactivate(LV2_Handle) {}

@@ -6,5 +6,7 @@ set -e
 VS="/c/Program Files/Microsoft Visual Studio/18/Community"
 CMAKE="$VS/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe"
 cd "$(dirname "$0")"
-[ -d build ] || "$CMAKE" -S . -B build -A x64 >/dev/null
+# LV2 only by default. AG_PLUGIN_FORMATS=ON also builds CLAP and VST3, which downloads
+# clap-wrapper and the CLAP and VST3 SDKs from GitHub.
+"$CMAKE" -S . -B build -A x64 -DAG_PLUGIN_FORMATS=${AG_PLUGIN_FORMATS:-OFF} >/dev/null
 "$CMAKE" --build build --config Release -- -v:m -nologo "$@"

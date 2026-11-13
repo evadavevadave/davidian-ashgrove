@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Davidian
 #
-# Builds and tests the ashgrove.lv2 bundle on Windows, Linux and macOS.
-# Every branch push uploads the three bundles as workflow artifacts. Pushing a tag such as
-# v1.1.0 also publishes them as a GitHub release.
+# Builds and tests the plugins on Windows, Linux and macOS, in every format:
+# LV2, CLAP, VST3, and AU on macOS. Every branch push uploads one zip per system as a
+# workflow artifact. Pushing a tag such as v1.2.0 also publishes them as a release.
 name: Build
 
 on:
@@ -26,14 +26,17 @@ jobs:
             name: windows-x64
             lib: ashgrove.dll
             configure: -A x64
+            plugins: out/plugins
           - os: ubuntu-22.04
             name: linux-x64
             lib: ashgrove.so
             configure: -DCMAKE_BUILD_TYPE=Release
+            plugins: out/plugins
           - os: macos-latest
             name: macos-universal
             lib: ashgrove.dylib
             configure: '-DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"'
+            plugins: out/plugins
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -43,7 +46,11 @@ jobs:
 
       - name: Install Linux packages
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libx11-dev lilv-utils
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev lilv-utils ninja-build
+
+      - name: Install Ninja (macOS)
+        if: runner.os == 'macOS'
+        run: command -v ninja || brew install ninja
 
       - name: Configure
         run: cmake -S . -B out ${{ matrix.configure }}
@@ -51,16 +58,57 @@ jobs:
       - name: Build
         run: cmake --build out --config Release --parallel
 
+      - name: Find the built plugins
+        run: |
+          p=${{ matrix.plugins }}
+          case "$RUNNER_OS" in
+            Windows)
+              echo "BIN=out/Release" >> "$GITHUB_ENV"
+              echo "CLAP_DIR=$p/CLAP/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
+              echo "CLAP_BIN=$p/CLAP/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
+              echo "VST3_DIR=$p/VST3/Davidian Ashgrove.vst3" >> "$GITHUB_ENV" ;;
+            Linux)
+              echo "BIN=out" >> "$GITHUB_ENV"
+              echo "CLAP_DIR=$p/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
+              echo "CLAP_BIN=$p/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
+              echo "VST3_DIR=$p/Davidian Ashgrove.vst3" >> "$GITHUB_ENV" ;;
+            macOS)
+              echo "BIN=out" >> "$GITHUB_ENV"
+              echo "CLAP_DIR=$p/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
+              echo "CLAP_BIN=$p/Davidian Ashgrove.clap/Contents/MacOS/Davidian Ashgrove" >> "$GITHUB_ENV"
+              echo "VST3_DIR=$p/Davidian Ashgrove.vst3" >> "$GITHUB_ENV"
+              echo "AU_DIR=$p/Davidian Ashgrove.component" >> "$GITHUB_ENV" ;;
+          esac
+          ls -la "$p" "$p"/* || true
+
       - name: Test
         run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then bin=out/Release; else bin=out; fi
-          bundle=out/lv2/ashgrove.lv2
-          "$bin/cab_check"
-          "$bin/ui_ports_check"
-          "$bin/plugin_check" "$bundle/${{ matrix.lib }}"
-          "$bin/idle_check"
-          "$bin/spec_test" > spec_results.txt
+          "$BIN/cab_check"
+          "$BIN/ui_ports_check"
+          "$BIN/plugin_check" "out/lv2/ashgrove.lv2/${{ matrix.lib }}"
+          "$BIN/clap_check" "$CLAP_BIN"
+          "$BIN/idle_check"
+          "$BIN/spec_test" > spec_results.txt
           tail -n 5 spec_results.txt
+
+      - name: Validate the VST3 with Steinberg's validator
+        run: |
+          cmake --build out --config Release --target vst3_validator
+          v=$(find out/validator-build -type f \( -name validator -o -name validator.exe \) | head -n 1)
+          echo "validator: $v"
+          "$v" "$VST3_DIR"
+
+      - name: Validate the Audio Units with auval (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "$AU_DIR" ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          auval -a | grep -i Dvdn
+          for sub in AgCL AgCC AgLE AgSC AgDR; do
+            auval -v aufx "$sub" Dvdn > "auval-$sub.txt" 2>&1 || { tail -n 40 "auval-$sub.txt"; exit 1; }
+            tail -n 3 "auval-$sub.txt"
+          done
 
       - name: Check the bundle with lilv (Linux)
         if: runner.os == 'Linux'
@@ -73,21 +121,31 @@ jobs:
           done
           # The libraries must not depend on a newer C++ runtime than the host has.
           ! ldd out/lv2/ashgrove.lv2/ashgrove.so | grep -q libstdc++
+          ! ldd "$CLAP_BIN" | grep -q libstdc++
           ldd out/lv2/ashgrove.lv2/ashgrove_ui.so
 
-      - name: Check the universal binary (macOS)
+      - name: Check the universal binaries (macOS)
         if: runner.os == 'macOS'
-        run: lipo -info out/lv2/ashgrove.lv2/ashgrove.dylib | grep -q "x86_64 arm64\|arm64 x86_64"
+        run: |
+          for f in out/lv2/ashgrove.lv2/ashgrove.dylib "$CLAP_BIN" \
+                   "$VST3_DIR/Contents/MacOS/Davidian Ashgrove" "$AU_DIR/Contents/MacOS/Davidian Ashgrove"; do
+            lipo -info "$f" | grep -q "x86_64 arm64\|arm64 x86_64" || { lipo -info "$f"; exit 1; }
+          done
 
       - name: Package
         run: |
-          mkdir -p dist/ashgrove.lv2
-          cp out/lv2/ashgrove.lv2/*.ttl dist/ashgrove.lv2/
-          cp out/lv2/ashgrove.lv2/ashgrove*.* dist/ashgrove.lv2/ 2>/dev/null || true
-          rm -f dist/ashgrove.lv2/*.lib dist/ashgrove.lv2/*.exp dist/ashgrove.lv2/*.pdb
-          cp LICENSE LICENSE-LV2 dist/ashgrove.lv2/
-          ls -l dist/ashgrove.lv2
-          cd dist && cmake -E tar cf "ashgrove-${{ matrix.name }}.zip" --format=zip ashgrove.lv2
+          d=dist/Ashgrove
+          mkdir -p "$d/LV2/ashgrove.lv2" "$d/CLAP" "$d/VST3"
+          cp out/lv2/ashgrove.lv2/*.ttl "$d/LV2/ashgrove.lv2/"
+          cp out/lv2/ashgrove.lv2/ashgrove*.* "$d/LV2/ashgrove.lv2/" 2>/dev/null || true
+          rm -f "$d"/LV2/ashgrove.lv2/*.lib "$d"/LV2/ashgrove.lv2/*.exp "$d"/LV2/ashgrove.lv2/*.pdb
+          cp -R "$CLAP_DIR" "$d/CLAP/"
+          cp -R "$VST3_DIR" "$d/VST3/"
+          if [ -n "$AU_DIR" ]; then mkdir -p "$d/AU" && cp -R "$AU_DIR" "$d/AU/"; fi
+          find "$d" \( -name "*.pdb" -o -name "*.lib" -o -name "*.exp" -o -name "*.ilk" \) -delete
+          cp LICENSE LICENSE-LV2 "$d/"
+          find "$d" | sort
+          cd dist && cmake -E tar cf "ashgrove-${{ matrix.name }}.zip" --format=zip Ashgrove
 
       - uses: actions/upload-artifact@v4
         with:
@@ -111,4 +169,4 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" dist/*.zip --repo "$GITHUB_REPOSITORY" \
             --title "Davidian Ashgrove ${GITHUB_REF_NAME#v}" \
-            --notes "Ready-built ashgrove.lv2 bundles for Windows (x64), Linux (x64) and macOS (Apple silicon and Intel). Unzip and copy the ashgrove.lv2 folder into your LV2 folder; see the README for paths."
+            --notes "Ready-built plugins for Windows (x64), Linux (x64) and macOS (Apple silicon and Intel): LV2, CLAP and VST3 on all three, plus Audio Units on macOS. Unzip and copy each format's folder into your plugin folders; see the README for paths."
