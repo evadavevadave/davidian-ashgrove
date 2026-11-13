@@ -1,9 +1,9 @@
-# Davidian Ashgrove — LV2 amp plugins
+# Davidian Ashgrove — amp plugins (VST3, AU, CLAP, LV2)
 
-Davidian LV2 models of 11 valve amps from a classic 1980s British amp range, solved at circuit level from the
+Davidian plugin models of 11 valve amps from a classic 1980s British amp range, solved at circuit level from the
 service-manual schematics, with a choice of speaker cabinets. They come as five mono plugins, one per amp family, each
-with a model selector, a choice of output valves and a cabinet selector. Ready-built for Windows, Linux and macOS.
-Plugin URIs start with `urn:davidian:ashgrove-`. Made with AI assistance; see [Use of AI](#use-of-ai).
+with a model selector, a choice of output valves and a cabinet selector. Ready-built as VST3, CLAP and LV2 for
+Windows, Linux and macOS, and as Audio Units for macOS. Made with AI assistance; see [Use of AI](#use-of-ai).
 
 | Plugin | Models | Output valves | Default cabinet |
 |---|---|---|---|
@@ -18,38 +18,51 @@ the same, so each pair sounds the same here.
 
 ## Install
 
-Ready-built bundles for each system are on the [Releases](https://github.com/evadavevadave/davidian-ashgrove/releases)
-page, and the same files are in the `prebuilt/` folder of the repository:
+Download the zip for your system from the [Releases](https://github.com/evadavevadave/davidian-ashgrove/releases)
+page. The same files are in the `prebuilt/` folder of the repository.
 
-| System | Download | Folder in the repository | GUI |
+| System | Download | Formats | GUI |
 |---|---|---|---|
-| Windows 10 or later, 64-bit | `ashgrove-windows-x64.zip` | `prebuilt/windows-x64/ashgrove.lv2` | Yes (`ui:WindowsUI`) |
-| Linux, 64-bit x86 | `ashgrove-linux-x64.zip` | `prebuilt/linux-x64/ashgrove.lv2` | Yes (`ui:X11UI`) |
-| macOS 10.13 or later, Apple silicon and Intel | `ashgrove-macos-universal.zip` | `prebuilt/macos-universal/ashgrove.lv2` | No: hosts show their own controls |
+| Windows 10 or later, 64-bit | `ashgrove-windows-x64.zip` | VST3, CLAP, LV2 | Yes |
+| Linux, 64-bit x86 | `ashgrove-linux-x64.zip` | VST3, CLAP, LV2 | Yes (X11) |
+| macOS 10.13 or later, Apple silicon and Intel | `ashgrove-macos-universal.zip` | AU, VST3, CLAP, LV2 | No: hosts show their own controls |
 
-Copy the whole `ashgrove.lv2` folder into an LV2 folder:
+Each zip has one folder per format. Copy the plugin in it to that format's folder, and use only the format your host
+prefers:
 
-- Windows: `%APPDATA%\LV2` (current user) or `%COMMONPROGRAMFILES%\LV2` (all users)
-- Linux: `~/.lv2` (current user) or `/usr/local/lib/lv2` (all users)
-- macOS: `~/Library/Audio/Plug-Ins/LV2` (current user) or `/Library/Audio/Plug-Ins/LV2` (all users)
+| Format | Copy | Windows | macOS | Linux |
+|---|---|---|---|---|
+| VST3 | `Davidian Ashgrove.vst3` | `C:\Program Files\Common Files\VST3` | `~/Library/Audio/Plug-Ins/VST3` | `~/.vst3` |
+| AU | `Davidian Ashgrove.component` | — | `~/Library/Audio/Plug-Ins/Components` | — |
+| CLAP | `Davidian Ashgrove.clap` | `C:\Program Files\Common Files\CLAP` | `~/Library/Audio/Plug-Ins/CLAP` | `~/.clap` |
+| LV2 | `ashgrove.lv2` | `%APPDATA%\LV2` | `~/Library/Audio/Plug-Ins/LV2` | `~/.lv2` |
 
-If your host doesn't scan that folder, add it to the host's LV2 search path or set the `LV2_PATH` environment variable.
-Close the host before copying and restart it afterwards. Replace any older copy instead of keeping two: when two bundles
-have the same URI, the loader uses one and ignores the other.
+All five plugins are in each file. In the VST3, AU and CLAP versions they are listed under the vendor **Davidian**;
+the LV2 versions are named **Davidian Ashgrove ...**. The VST3, AU and CLAP versions are the same plugin, so a project
+saved in one host opens with the same settings in another that uses the same format.
 
-The macOS bundle isn't signed, so macOS may block a downloaded copy. If the host can't load it, clear the download flag
-in Terminal:
+Close the host before copying and restart it afterwards, or rescan its plugins. Replace any older copy instead of
+keeping two: when two copies have the same ID, the host uses one and ignores the other.
+
+The macOS files aren't signed, so macOS may block a downloaded copy. If the host can't load one, clear the download
+flag in Terminal, for example:
 
 ```bash
-xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/LV2/ashgrove.lv2
+xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/"Davidian Ashgrove.component"
 ```
 
-Look for **Davidian Ashgrove** in your host's plugin list. The plugins work in hosts that load LV2, such as Ardour,
-Reaper, Carla and Qtractor.
+For Logic Pro and GarageBand, which use Audio Units, macOS may need a restart or a fresh plugin scan before the
+plugins appear.
 
 ## Build and test
 
-The build uses CMake 3.20 or later and a C++17 compiler. The bundle lands in `<build folder>/lv2/ashgrove.lv2`.
+The build uses CMake 3.21 or later and a C++17 compiler. The LV2 bundle lands in `<build folder>/lv2/ashgrove.lv2`,
+and the VST3, CLAP and AU plugins in `<build folder>/plugins`.
+
+The VST3, CLAP and AU builds come from one CLAP implementation (`src/clap`) through
+[clap-wrapper](https://github.com/free-audio/clap-wrapper). Configuring with `AG_PLUGIN_FORMATS=ON` (the CMake default)
+downloads clap-wrapper and the CLAP, VST3 and AudioUnit SDKs from GitHub at pinned versions. Set it to `OFF` to build
+LV2 only, with no downloads.
 
 **Windows (Visual Studio):** from Git Bash,
 
@@ -62,9 +75,10 @@ sh run_checks.sh
 ```
 
 `build.sh` needs Visual Studio 18 with its C++ tools and CMake. Edit `VS` at the top if your install is somewhere else.
-`run_checks.sh` rebuilds, then runs every check and writes the results to `build/`.
+It builds LV2 only unless you run it as `AG_PLUGIN_FORMATS=ON sh build.sh`. `run_checks.sh` rebuilds, then runs every
+check and writes the results to `build/`.
 
-**Linux:** install CMake, a C++ compiler and the X11 headers (`libx11-dev` on Debian and Ubuntu), then:
+**Linux:** install CMake, a C++ compiler, Ninja and the X11 headers (`libx11-dev` on Debian and Ubuntu), then:
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel
@@ -76,8 +90,8 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" && cmake --build build --parallel
 ```
 
-GitHub Actions (`.github/workflows/build.yml`) builds and tests all three on every push. Pushing a version tag such as
-`v1.1.0` also publishes the three bundles as a release.
+GitHub Actions (`.github/workflows/build.yml`) builds and tests every format on all three systems on every push.
+Pushing a version tag such as `v1.2.0` also publishes the three zips as a release.
 
 The tests:
 
@@ -86,23 +100,36 @@ The tests:
 - `idle_check` runs each model with no input, at half and full controls, and reports any oscillation.
 - `cab_check` checks every cabinet at 44.1 to 192 kHz: stable, level-matched, and with the expected low cut and top-end
   roll-off. It prints each cabinet's response.
-- `plugin_check <library>` loads the built plugin library the way a host does and runs every plugin with every
-  cabinet. It needs no LV2 host, so it runs on all three systems.
+- `plugin_check <library>` loads the built LV2 library the way a host does and runs every plugin with every cabinet.
+- `clap_check <.clap binary>` loads the built CLAP the way a host does and checks every plugin: parameters against the
+  port tables, processing with every cabinet, parameter changes, saving and loading state, and on Windows opening the
+  GUI in a host window. The VST3 and AU versions run the same code.
 - `ui_ports_check` checks that every panel control sits on the right port with the plugin's default and range.
 - `ui_render <folder>` renders every panel to a .bmp without opening a window.
-- Windows only: `host_check` checks the bundle with the lilv LV2 parser (the one most hosts use) and runs every model,
-  valve and input combination. It loads lilv from Ardour 9, so it needs Ardour 9 installed in `C:\Program Files\Ardour9`.
-  `ui_check` loads the GUI the way a Windows host does and drives each panel with mouse messages.
-- On Linux, the workflow also checks the bundle with lilv's `lv2info` and makes sure the plugin doesn't need a newer
+- Windows only: `host_check` checks the LV2 bundle with the lilv LV2 parser (the one most hosts use) and runs every
+  model, valve and input combination. It loads lilv from Ardour 9, so it needs Ardour 9 installed in
+  `C:\Program Files\Ardour9`. `ui_check` loads the LV2 GUI the way a Windows host does and drives each panel with mouse
+  messages.
+- In the workflow: Steinberg's VST3 validator checks the VST3 on all three systems, Apple's `auval` checks each Audio
+  Unit on macOS, lilv's `lv2info` checks the LV2 bundle on Linux, and the Linux plugins are checked not to need a newer
   C++ runtime than the host has.
+
+## Parameters in VST3, AU and CLAP
+
+Every panel control is a host parameter. Its ID is the control's LV2 port number, so all formats share one numbering.
+Selectors (model, output valves, input, oversampling, cabinet) show their choices by name, and the levels show dB.
+Knobs and switches can be automated. Selectors aren't offered for automation, because each change rebuilds the circuit
+behind a short fade. The plugin's settings are saved with the project, and its 16 samples of latency are reported to
+the host.
 
 ## GUI
 
 Each plugin has its own panel in the house style: graphite panel, cream lettering, amber accents, black knurled knobs
 and outlined section boxes. The style lives in `src/ui/style.h` (palette and text sizes), `font.h` (stroke font) and
 `canvas.h` (renderer). The GUI draws with its own software renderer into a native window, so it needs no graphics
-libraries: a Win32 window on Windows and an X11 window on Linux. The macOS build has no GUI, and hosts there show their
-own controls. The Linux GUI is built by CI but hasn't been tried in a host yet.
+libraries: a Win32 window on Windows and an X11 window on Linux. The same panel opens in the VST3, CLAP and LV2
+versions. The macOS builds have no GUI, and hosts there show their own controls. The Linux GUI and the VST3 and CLAP
+GUIs are built and checked by CI but haven't been tried in a host yet.
 
 - **Knobs:** drag up or down. Hold Shift for fine control, use the mouse wheel for small steps, and double-click to reset.
 - **Selectors:** click a row to choose it. The lit amber lamp is the current choice.
@@ -312,24 +339,29 @@ Doubtful schematic readings, each assumed as stated in `src/amp.cpp`:
 | `src/spring.h` | Spring reverb |
 | `src/oversampler.h` | Oversampling filters |
 | `src/cabinet.h` | Speaker cabinets |
+| `src/engine.h` | The engine every format runs: amp, cabinet, levels and the fade around selector changes |
 | `src/plugin.cpp` | LV2 entry points |
+| `src/clap/ashgrove_clap.cpp` | The CLAP plugins: parameters, state, latency, GUI. clap-wrapper builds VST3 and AU from it |
+| `src/clap/entry.cpp` | The exported CLAP entry point, compiled into each format |
 | `src/ports.h` | Port tables shared by the plugin, the Turtle generator and the tests |
 | `src/lv2_abi.h` | The LV2 C interface, so no SDK is needed |
 | `src/ui/layouts.h` | The five panel layouts |
 | `src/ui/panel.h` | GUI drawing and mouse handling, with no platform code |
 | `src/ui/style.h`, `canvas.h`, `font.h` | House style, software renderer and stroke font |
-| `src/ui/ui_lv2.c` | LV2 UI entry points and the Win32 and X11 window layers |
+| `src/ui/ui_window.c` | The Win32 and X11 window layers, shared by the LV2 and CLAP GUIs |
+| `src/ui/ui_lv2.c` | LV2 UI entry points |
 | `tools/gen_ttl.cpp` | Writes `manifest.ttl` and `ashgrove.ttl` for the build's system from the port tables |
 | `tests/spec_test.cpp` | Measures every model against the manual |
 | `tests/idle_check.cpp` | Checks for oscillation with no input |
 | `tests/cab_check.cpp` | Checks every cabinet's stability, level and shape |
-| `tests/plugin_check.cpp` | Loads the built library and runs every plugin and cabinet, on any system |
+| `tests/plugin_check.cpp` | Loads the built LV2 library and runs every plugin and cabinet, on any system |
+| `tests/clap_check.cpp` | Loads the built CLAP and checks parameters, processing, state and the GUI |
 | `tests/host_check.cpp` | Checks the bundle with lilv and runs every combination |
 | `tests/ui_ports_check.cpp` | Checks the panels against the plugin ports |
 | `tests/ui_check.c` | Hosts the built GUI and drives it with mouse messages |
 | `tests/ui_render.c` | Renders every panel to a .bmp file |
 | `.github/workflows/build.yml` | Builds and tests on Windows, Linux and macOS, and publishes tagged releases |
-| `prebuilt/` | Ready-built bundles for each system, the same files as the latest release |
+| `prebuilt/` | Ready-built plugins for each system and format, the same files as the latest release |
 
 ## References
 
@@ -356,6 +388,7 @@ by Claude (Anthropic's Claude Opus 5.5, through Claude Code), directed and revie
   - chose the cabinet types and designed their filter shapes
   - adapted the house-style GUI to the five panels, and wrote the Linux window layer from the house X11 code
   - made the build portable and wrote the GitHub Actions workflow
+  - wrote the CLAP implementation and set up clap-wrapper to build the VST3 and AU versions from it
   - wrote the test programs and documentation
 - **Checking:** the results are checked by the automated tests described above:
   - power, sensitivity, tone ranges and DC voltages against the manual
@@ -363,10 +396,12 @@ by Claude (Anthropic's Claude Opus 5.5, through Claude Code), directed and revie
   - every cabinet's stability, level and shape
   - every plugin and cabinet run from the built library on Windows, Linux and macOS
   - the bundle loaded through lilv on Windows and Linux
-  - the Windows GUI loaded and driven by simulated mouse input
+  - the CLAP loaded and checked on all three systems, the VST3 through Steinberg's validator, and each Audio Unit
+    through Apple's `auval`
+  - the Windows GUI loaded and driven by simulated mouse input, and opened in a host window through CLAP
 - **Not checked:** the sound hasn't been compared with real amplifiers or cabinets. Some valve parameters were recalled
   from the AI's memory rather than looked up, and the values under [Estimates](#estimates) should be tuned by ear. The
-  Linux GUI and the macOS build haven't been tried in a host.
+  Linux GUI, the VST3, CLAP and AU versions and the macOS builds haven't been tried in a host.
 
 ## License
 
@@ -387,9 +422,17 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](L
 | Ardour 9 | GPL-2.0-or-later | Used only as a test host and as the source of lilv for `host_check`. No Ardour code is included. |
 | Microsoft C runtime | Visual Studio licence | The Windows build links it statically (`/MT`) into the DLLs. It counts as a system library under the GPL, so this is allowed. |
 | GCC runtime (`libstdc++`, `libgcc`) | GPL-3.0 with the GCC Runtime Library Exception | The Linux build links it statically, so the plugin runs on hosts with an older C++ runtime. The exception allows this. |
-| GitHub Actions (`actions/checkout`, `upload-artifact`, `download-artifact`) | MIT | Used by the build workflow only. Nothing is included in the bundles. |
+| CLAP SDK | MIT | Its headers define the CLAP interface the plugins implement. Built into the CLAP, VST3 and AU versions. |
+| clap-wrapper | MIT | Builds the VST3 and AU versions from the CLAP implementation. Its wrapper code is built into those versions. |
+| VST3 SDK (Steinberg) | MIT | Used by clap-wrapper for the VST3 version; parts of it are built into the VST3 plugin. |
+| AudioUnitSDK (Apple) | Apache-2.0 | Used by clap-wrapper for the AU version; parts of it are built into the Audio Units. Apache-2.0 is compatible with GPL-3.0. |
+| GitHub Actions (`actions/checkout`, `upload-artifact`, `download-artifact`) | MIT | Used by the build workflow only. Nothing is included in the plugins. |
+
+The SDKs above are downloaded when the build is configured and are not stored in this repository. Each release zip
+includes their licence texts in its `licenses` folder.
 
 Every source file starts with an SPDX licence line saying which of these applies.
 
 This project is not affiliated with or endorsed by the maker of the original amplifiers. Valve type numbers (EL34,
-KT77, 6550, ECC83, 12AX7) are generic industry designations.
+KT77, 6550, ECC83, 12AX7) are generic industry designations. VST is a registered trademark of Steinberg Media
+Technologies GmbH. Audio Units is a trademark of Apple Inc.

@@ -53,10 +53,10 @@ jobs:
         run: command -v ninja || brew install ninja
 
       - name: Configure
-        run: cmake -S . -B out ${{ matrix.configure }}
+        run: mkdir -p logs && cmake -S . -B out ${{ matrix.configure }} 2>&1 | tee logs/configure.txt
 
       - name: Build
-        run: cmake --build out --config Release --parallel
+        run: cmake --build out --config Release --parallel 2>&1 | tee logs/build.txt
 
       - name: Find the built plugins
         run: |
@@ -83,6 +83,7 @@ jobs:
 
       - name: Test
         run: |
+          exec > >(tee logs/test.txt) 2>&1
           "$BIN/cab_check"
           "$BIN/ui_ports_check"
           "$BIN/plugin_check" "out/lv2/ashgrove.lv2/${{ matrix.lib }}"
@@ -93,6 +94,7 @@ jobs:
 
       - name: Validate the VST3 with Steinberg's validator
         run: |
+          exec > >(tee logs/validator.txt) 2>&1
           cmake --build out --config Release --target vst3_validator
           v=$(find out/validator-build -type f \( -name validator -o -name validator.exe \) | head -n 1)
           echo "validator: $v"
@@ -144,8 +146,27 @@ jobs:
           if [ -n "$AU_DIR" ]; then mkdir -p "$d/AU" && cp -R "$AU_DIR" "$d/AU/"; fi
           find "$d" \( -name "*.pdb" -o -name "*.lib" -o -name "*.exp" -o -name "*.ilk" \) -delete
           cp LICENSE LICENSE-LV2 "$d/"
+          # Licence texts of the SDKs built into the VST3, AU and CLAP versions.
+          mkdir -p "$d/licenses"
+          cp out/_deps/clap-wrapper-src/LICENSE* "$d/licenses/clap-wrapper-LICENSE.txt"
+          for n in clap vst3sdk AudioUnitSDK; do
+            f=$(find out -maxdepth 6 -path "*cpm/$n/LICENSE*" -type f | head -n 1)
+            if [ -n "$f" ]; then cp "$f" "$d/licenses/$n-LICENSE.txt"; fi
+          done
+          ls "$d/licenses"
           find "$d" | sort
           cd dist && cmake -E tar cf "ashgrove-${{ matrix.name }}.zip" --format=zip Ashgrove
+
+      # Step logs need a GitHub sign-in to read; annotations do not, so the first
+      # error lines of each log are repeated as annotations.
+      - name: Report errors
+        if: failure()
+        run: |
+          for f in logs/*.txt; do
+            grep -E -i "error|FAIL|fatal|undefined reference|cannot|not found" "$f" \
+              | grep -E -v -i "warning|[^0-9]0 error|-Werror" \
+              | head -n 9 | sed "s|^|::error title=$(basename "$f")::|" || true
+          done
 
       - uses: actions/upload-artifact@v4
         with:
