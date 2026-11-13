@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>English</string>
+    <key>CFBundleExecutable</key>
+    <string>Davidian Ashgrove</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.davidian.ashgrove.auv2</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>Davidian Ashgrove</string>
+    <key>CFBundlePackageType</key>
+    <string>BNDL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.2.0</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleVersion</key>
+    <string>1.2.0</string>
+    <key>NSPrincipalClass</key>
+    <string/>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>AudioComponents</key>
+    <array>
+      <!-- entry for id 'com.davidian.ashgrove.classic-lead' / plugin index 0 -->
+      <dict>
+        <key>name</key>
+        <string>Davidian: Davidian Ashgrove Classic Lead</string>
+        <key>description</key>
+        <string>Two-channel valve lead head, 50 or 100 W, with speaker cabinets</string>
+        <key>factoryFunction</key>
+        <string>wrapAsAUV2_inst0Factory</string>
+        <key>manufacturer</key>
+        <string>Dvdn</string>
+        <key>subtype</key>
+        <string>AgCL</string>
+        <key>type</key>
+        <string>aufx</string>
+        <key>version</key>
+        <integer>66048</integer>
+        <key>sandboxSafe</key>
+        <true/>
+        <key>resourceUsage</key>
+        <dict>
+           <key>network.client</key>
+           <true/>
+           <key>temporary-exception.files.all.read-write</key>
+           <true/>
+        </dict>
+        <key>tags</key>
+        <array>
+          <string>Audio-effect</string>
+          <string>Distortion</string>
+          <string>Mono</string>
+        </array>
+      </dict>
+      <!-- entry for id 'com.davidian.ashgrove.cascade-lead' / plugin index 1 -->
+      <dict>
+        <key>name</key>
+        <string>Davidian: Davidian Ashgrove Cascade Lead</string>
+        <key>description</key>
+        <string>Master-volume valve lead amp, 50 or 100 W, with speaker cabinets</string>
+        <key>factoryFunction</key>
+        <string>wrapAsAUV2_inst1Factory</string>
+        <key>manufacturer</key>
+        <string>Dvdn</string>
+        <key>subtype</key>
+        <string>AgCC</string>
+        <key>type</key>
+        <string>aufx</string>
+        <key>version</key>
+        <integer>66048</integer>
+        <key>sandboxSafe</key>
+        <true/>
+        <key>resourceUsage</key>
+        <dict>
+           <key>network.client</key>
+           <true/>
+           <key>temporary-exception.files.all.read-write</key>
+           <true/>
+        </dict>
+        <key>tags</key>
+        <array>
+          <string>Audio-effect</string>
+          <string>Distortion</string>
+          <string>Mono</string>
+        </array>
+      </dict>
+      <!-- entry for id 'com.davidian.ashgrove.low-end' / plugin index 2 -->
+      <dict>
+        <key>name</key>
+        <string>Davidian: Davidian Ashgrove Low End</string>
+        <key>description</key>
+        <string>Valve bass head with swept middle and slope, with speaker cabinets</string>
+        <key>factoryFunction</key>
+        <string>wrapAsAUV2_inst2Factory</string>
+        <key>manufacturer</key>
+        <string>Dvdn</string>
+        <key>subtype</key>
+        <string>AgLE</string>
+        <key>type</key>
+        <string>aufx</string>
+        <key>version</key>
+        <integer>66048</integer>
+        <key>sandboxSafe</key>
+        <true/>
+        <key>resourceUsage</key>
+        <dict>
+           <key>network.client</key>
+           <true/>
+           <key>temporary-exception.files.all.read-write</key>
+           <true/>
+        </dict>
+        <key>tags</key>
+        <array>
+          <string>Audio-effect</string>
+          <string>Distortion</string>
+          <string>Mono</string>
+        </array>
+      </dict>
+      <!-- entry for id 'com.davidian.ashgrove.spring-combo' / plugin index 3 -->
+      <dict>
+        <key>name</key>
+        <string>Davidian: Davidian Ashgrove Spring Combo</string>
+        <key>description</key>
+        <string>Two-channel 100 W valve combo with spring reverb and speaker cabinets</string>
+        <key>factoryFunction</key>
+        <string>wrapAsAUV2_inst3Factory</string>
+        <key>manufacturer</key>
+        <string>Dvdn</string>
+        <key>subtype</key>
+        <string>AgSC</string>
+        <key>type</key>
+        <string>aufx</string>
+        <key>version</key>
+        <integer>66048</integer>
+        <key>sandboxSafe</key>
+        <true/>
+        <key>resourceUsage</key>
+        <dict>
+           <key>network.client</key>
+           <true/>
+           <key>temporary-exception.files.all.read-write</key>
+           <true/>
+        </dict>
+        <key>tags</key>
+        <array>
+          <string>Audio-effect</string>
+          <string>Distortion</string>
+          <string>Mono</string>
+        </array>
+      </dict>
+      <!-- entry for id 'com.davidian.ashgrove.dual-rail' / plugin index 4 -->
+      <dict>
+        <key>name</key>
+        <string>Davidian: Davidian Ashgrove Dual Rail</string>
+        <key>description</key>
+        <string>Relay-switched two-channel 250 W valve head with speaker cabinets</string>
+        <key>factoryFunction</key>
+        <string>wrapAsAUV2_inst4Factory</string>
+        <key>manufacturer</key>
+        <string>Dvdn</string>
+        <key>subtype</key>
+        <string>AgDR</string>
+        <key>type</key>
+        <string>aufx</string>
+        <key>version</key>
+        <integer>66048</integer>
+        <key>sandboxSafe</key>
+        <true/>
+        <key>resourceUsage</key>
+        <dict>
+           <key>network.client</key>
+           <true/>
+           <key>temporary-exception.files.all.read-write</key>
+           <true/>
+        </dict>
+        <key>tags</key>
+        <array>
+          <string>Audio-effect</string>
+          <string>Distortion</string>
+          <string>Mono</string>
+        </array>
+      </dict>
+    </array>
+  </dict>
+</plist>
