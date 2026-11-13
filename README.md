@@ -1,9 +1,19 @@
-# Davidian Ashgrove — amp plugins (VST3, AU, CLAP, LV2)
+# Davidian Ashgrove
 
-Davidian plugin models of 11 valve amps from a classic 1980s British amp range, solved at circuit level from the
-service-manual schematics, with a choice of speaker cabinets. They come as five mono plugins, one per amp family, each
-with a model selector, a choice of output valves and a cabinet selector. Ready-built as VST3, CLAP and LV2 for
-Windows, Linux and macOS, and as Audio Units for macOS. Made with AI assistance; see [Use of AI](#use-of-ai).
+Circuit-modelled guitar and bass amplifier plugins (LV2, VST3, CLAP and Audio Unit): 11 valve amps from a classic 1980s British amp range, solved at circuit level from the service-manual schematics, with a choice of output valves and speaker cabinets. They come as five plugins, one per amp family, each with a model selector.
+
+**A close model, not an exact copy.** It is a simulation of the circuits from their component values, not sampled or measured amps, and some details are reasoned estimates (listed under [Estimates](#estimates)). It has not been compared side by side with built units, so expect it to sound close to the hardware rather than identical.
+
+![The GUI (Classic Lead)](docs/panel_classic_lead.png)
+
+Mono amps (mono or stereo tracks work too). The same GUI in the VST3, CLAP and LV2 versions on Windows and Linux; the macOS builds have no GUI, and hosts there show their own controls. GPL-3.0-or-later.
+
+| Format | Windows | macOS | Linux |
+|---|---|---|---|
+| LV2 | yes | yes (no GUI) | yes |
+| VST3 | yes | yes (no GUI) | yes |
+| CLAP | yes | yes (no GUI) | yes |
+| Audio Unit (AUv2) | | yes (no GUI) | |
 
 | Plugin | Models | Output valves | Default cabinet |
 |---|---|---|---|
@@ -13,137 +23,78 @@ Windows, Linux and macOS, and as Audio Units for macOS. Made with AI assistance;
 | Spring Combo | SC212 (2x12), SC410 (4x10) | KT77, 6550 | 2x12 Open |
 | Dual Rail | DR250 (250 W head) | 6550, KT77 | 4x12 Modern |
 
-The output valves offered are the ones each spec sheet lists. The manual draws CC100/CH100, CC50/CH50 and SC212/SC410
-the same, so each pair sounds the same here.
+The output valves offered are the ones each spec sheet lists. The manual draws CC100/CH100, CC50/CH50 and SC212/SC410 the same, so each pair sounds the same here.
 
-## Install
+## Download
 
-Download the zip for your system from the [Releases](https://github.com/evadavevadave/davidian-ashgrove/releases)
-page. The same files are in the `prebuilt/` folder of the repository.
+Ready-made builds are on the [Releases page](https://github.com/evadavevadave/davidian-ashgrove/releases). The same files are in the `prebuilt/` folder of the repository.
 
-| System | Download | Formats | GUI |
-|---|---|---|---|
-| Windows 10 or later, 64-bit | `ashgrove-windows-x64.zip` | VST3, CLAP, LV2 | Yes |
-| Linux, 64-bit x86 | `ashgrove-linux-x64.zip` | VST3, CLAP, LV2 | Yes (X11) |
-| macOS 10.13 or later, Apple silicon and Intel | `ashgrove-macos-universal.zip` | AU, VST3, CLAP, LV2 | No: hosts show their own controls |
+| Download | Contains | For |
+|---|---|---|
+| `ashgrove-windows-x64.zip` | LV2, VST3, CLAP | Windows 10/11, 64-bit hosts |
+| `ashgrove-macos-universal.zip` | LV2, VST3, CLAP, Audio Unit | macOS 10.13 or later, Apple silicon and Intel |
+| `ashgrove-linux-x64.zip` | LV2, VST3, CLAP | 64-bit Intel/AMD Linux (X11 GUI) |
 
-Each zip has one folder per format. Copy the plugin in it to that format's folder, and use only the format your host
-prefers:
+Unzip, copy the plugin folder for your host's format into its plugin folder, and restart your host (or rescan plugins). Each zip has one folder per format; use only the format your host prefers:
 
-| Format | Copy | Windows | macOS | Linux |
-|---|---|---|---|---|
-| VST3 | `Davidian Ashgrove.vst3` | `C:\Program Files\Common Files\VST3` | `~/Library/Audio/Plug-Ins/VST3` | `~/.vst3` |
-| AU | `Davidian Ashgrove.component` | — | `~/Library/Audio/Plug-Ins/Components` | — |
-| CLAP | `Davidian Ashgrove.clap` | `C:\Program Files\Common Files\CLAP` | `~/Library/Audio/Plug-Ins/CLAP` | `~/.clap` |
-| LV2 | `ashgrove.lv2` | `%APPDATA%\LV2` | `~/Library/Audio/Plug-Ins/LV2` | `~/.lv2` |
+| Format | Copy | Into |
+|---|---|---|
+| VST3 (Windows) | `Davidian Ashgrove.vst3` | `C:\Program Files\Common Files\VST3` |
+| VST3 (macOS) | `Davidian Ashgrove.vst3` | `~/Library/Audio/Plug-Ins/VST3` |
+| VST3 (Linux) | `Davidian Ashgrove.vst3` | `~/.vst3` |
+| CLAP (Windows) | `Davidian Ashgrove.clap` | `C:\Program Files\Common Files\CLAP` |
+| CLAP (macOS) | `Davidian Ashgrove.clap` | `~/Library/Audio/Plug-Ins/CLAP` |
+| CLAP (Linux) | `Davidian Ashgrove.clap` | `~/.clap` |
+| Audio Unit (macOS) | `Davidian Ashgrove.component` | `~/Library/Audio/Plug-Ins/Components` |
+| LV2 (Windows) | `ashgrove.lv2` | `%APPDATA%\LV2` (create it if it doesn't exist) |
+| LV2 (macOS) | `ashgrove.lv2` | `~/Library/Audio/Plug-Ins/LV2` |
+| LV2 (Linux) | `ashgrove.lv2` | `~/.lv2` |
 
-All five plugins are in each file. In the VST3, AU and CLAP versions they are listed under the vendor **Davidian**;
-the LV2 versions are named **Davidian Ashgrove ...**. The VST3, AU and CLAP versions are the same plugin, so a project
-saved in one host opens with the same settings in another that uses the same format.
+All five plugins are in each file. In the host they are listed under **Davidian** (VST3, CLAP, Audio Unit) or as **Davidian Ashgrove ...** (LV2). The VST3, AU and CLAP versions are the same plugin, so a project saved in one host opens with the same settings in another that uses the same format. Replace any older copy instead of keeping two: when two copies have the same ID, the host uses one and ignores the other.
 
-Close the host before copying and restart it afterwards, or rescan its plugins. Replace any older copy instead of
-keeping two: when two copies have the same ID, the host uses one and ignores the other.
-
-The macOS files aren't signed, so macOS may block a downloaded copy. If the host can't load one, clear the download
-flag in Terminal, for example:
+The macOS build isn't notarized, so macOS may block it after download. If the host can't load it, run this once in Terminal after copying (and the same for the other formats you installed):
 
 ```bash
 xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/"Davidian Ashgrove.component"
 ```
 
-For Logic Pro and GarageBand, which use Audio Units, macOS may need a restart or a fresh plugin scan before the
-plugins appear.
+Logic Pro and GarageBand only show an Audio Unit once macOS has registered it. If it doesn't appear, log out and back in, or restart the Mac.
 
-## Build and test
+## Controls
 
-The build uses CMake 3.21 or later and a C++17 compiler. The LV2 bundle lands in `<build folder>/lv2/ashgrove.lv2`,
-and the VST3, CLAP and AU plugins in `<build folder>/plugins`.
+Every panel has these:
 
-The VST3, CLAP and AU builds come from one CLAP implementation (`src/clap`) through
-[clap-wrapper](https://github.com/free-audio/clap-wrapper). Configuring with `AG_PLUGIN_FORMATS=ON` (the CMake default)
-downloads clap-wrapper and the CLAP, VST3 and AudioUnit SDKs from GitHub at pinned versions. Set it to `OFF` to build
-LV2 only, with no downloads.
+| Panel | Control | Circuit part |
+|---|---|---|
+| Model | Model | The family's models, default the first. Rebuilds the circuit behind a short fade |
+| Output Valves | Output Valves | The spec sheet's list, default the first. Changes the power-valve curves and bias |
+| Input | Input / Channel | The family's jacks or channels, default the first: high and low jacks, or channels |
+| Oversampling | 2X / 4X | Not on the amp: default 2x. 4x costs about twice the CPU |
+| Cabinet | Cabinet | Not on the amp: Off and five cabinets, default per plugin (see [Cabinets](#cabinets)). Switches behind a short fade |
+| Levels | Input | Input trim, -36 to +36 dB, default 0 dB: 0 dBFS at the input counts as 1 V peak at the amp's jack |
+| Levels | Output | Not on the amp: output level, -60 to +12 dB, default -6 dB. With the cabinet off, 0 dBFS before this control is rated power into the rated load |
 
-**Windows (Visual Studio):** from Git Bash,
+The amp controls on each panel:
 
-```bash
-sh build.sh
-```
+| Plugin | Amp controls |
+|---|---|
+| Classic Lead | Volume I, Volume II, Treble, Middle, Bass, Presence |
+| Cascade Lead | Preamp, Master, Treble, Middle, Bass, Presence |
+| Low End | Volume, Treble, Middle, Mid Sweep, Bass, Slope |
+| Spring Combo | Ch I Volume, Bright, Boost, Treble, Middle, Bass; Reverb Depth; Ch II Volume, Treble, Middle, Bass; Master |
+| Dual Rail | Ch I Gain, Treble, Middle, Bass, Presence; Ch II Gain, Treble, Middle, Mid Sweep, Bass, Volume |
 
-```bash
-sh run_checks.sh
-```
+Amp knobs run 0 to 10, as on the panels, and default to 5. Slope defaults to 0 and reverb depth to 3. Model, valve, input, oversampling and cabinet changes switch behind a short fade, so don't automate them.
 
-`build.sh` needs Visual Studio 18 with its C++ tools and CMake. Edit `VS` at the top if your install is somewhere else.
-It builds LV2 only unless you run it as `AG_PLUGIN_FORMATS=ON sh build.sh`. `run_checks.sh` rebuilds, then runs every
-check and writes the results to `build/`.
+Every panel control is a host parameter in VST3, AU and CLAP. Its ID is the control's LV2 port number, so all formats share one numbering. Selectors show their choices by name, and the levels show dB. Knobs and switches can be automated; selectors aren't offered for automation, because each change rebuilds the circuit. The plugin's settings are saved with the project. Latency is 16 samples and is reported to the host. The cabinet port comes after each plugin's knobs, so sessions saved with version 1.0 keep their settings and open with the plugin's default cabinet.
 
-**Linux:** install CMake, a C++ compiler, Ninja and the X11 headers (`libx11-dev` on Debian and Ubuntu), then:
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel
-```
-
-**macOS:** install the Xcode command line tools and CMake, then build for both Apple silicon and Intel:
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" && cmake --build build --parallel
-```
-
-GitHub Actions (`.github/workflows/build.yml`) builds and tests every format on all three systems on every push.
-Pushing a version tag such as `v1.2.0` also publishes the three zips as a release.
-
-The tests:
-
-- `spec_test` measures every model against its spec sheet (power, sensitivity, tone ranges, boost, bright, reverb)
-  and the manual's DC voltage table.
-- `idle_check` runs each model with no input, at half and full controls, and reports any oscillation.
-- `cab_check` checks every cabinet at 44.1 to 192 kHz: stable, level-matched, and with the expected low cut and top-end
-  roll-off. It prints each cabinet's response.
-- `plugin_check <library>` loads the built LV2 library the way a host does and runs every plugin with every cabinet.
-- `clap_check <.clap binary>` loads the built CLAP the way a host does and checks every plugin: parameters against the
-  port tables, processing with every cabinet, parameter changes, saving and loading state, and on Windows opening the
-  GUI in a host window. The VST3 and AU versions run the same code.
-- `ui_ports_check` checks that every panel control sits on the right port with the plugin's default and range.
-- `ui_render <folder>` renders every panel to a .bmp without opening a window.
-- Windows only: `host_check` checks the LV2 bundle with the lilv LV2 parser (the one most hosts use) and runs every
-  model, valve and input combination. It loads lilv from Ardour 9, so it needs Ardour 9 installed in
-  `C:\Program Files\Ardour9`. `ui_check` loads the LV2 GUI the way a Windows host does and drives each panel with mouse
-  messages.
-- In the workflow: Steinberg's VST3 validator checks the VST3 on all three systems, Apple's `auval` checks each Audio
-  Unit on macOS, lilv's `lv2info` checks the LV2 bundle on Linux, and the Linux plugins are checked not to need a newer
-  C++ runtime than the host has.
-
-## Parameters in VST3, AU and CLAP
-
-Every panel control is a host parameter. Its ID is the control's LV2 port number, so all formats share one numbering.
-Selectors (model, output valves, input, oversampling, cabinet) show their choices by name, and the levels show dB.
-Knobs and switches can be automated. Selectors aren't offered for automation, because each change rebuilds the circuit
-behind a short fade. The plugin's settings are saved with the project, and its 16 samples of latency are reported to
-the host.
-
-## GUI
-
-Each plugin has its own panel in the house style: graphite panel, cream lettering, amber accents, black knurled knobs
-and outlined section boxes. The style lives in `src/ui/style.h` (palette and text sizes), `font.h` (stroke font) and
-`canvas.h` (renderer). The GUI draws with its own software renderer into a native window, so it needs no graphics
-libraries: a Win32 window on Windows and an X11 window on Linux. The same panel opens in the VST3, CLAP and LV2
-versions. The macOS builds have no GUI, and hosts there show their own controls. The Linux GUI and the VST3 and CLAP
-GUIs are built and checked by CI but haven't been tried in a host yet.
-
-- **Knobs:** drag up or down. Hold Shift for fine control, use the mouse wheel for small steps, and double-click to reset.
-- **Selectors:** click a row to choose it. The lit amber lamp is the current choice.
-- **Toggles:** up is on.
-- **Readout:** the window at the top right shows the control you last touched and its value.
-
-The panel names are original. The panels use none of the original amps' logos, wordmarks or artwork.
+Drag a knob up or down, hold Shift to fine-tune, use the mouse wheel, and double-click to reset. Click a selector row to choose it; the lit amber lamp is the current choice. Toggles are up for on. The readout at the top right shows the control you last touched and its value.
 
 ### Classic Lead
 
 ![Classic Lead panel](docs/panel_classic_lead.png)
 
-Two-channel lead head with no master volume. Volume I and Volume II set each channel's level, and the four inputs pick
-the channel and the high or low jack.
+Two-channel lead head with no master volume. Volume I and Volume II set each channel's level, and the four inputs pick the channel and the high or low jack.
 
 ### Cascade Lead
 
@@ -155,57 +106,23 @@ Master-volume lead amp. Preamp sets the gain into the cascaded stage, and Master
 
 ![Low End panel](docs/panel_low_end.png)
 
-Bass head with a swept middle. Mid Sweep moves the middle control between about 400 Hz and 1 kHz, and Slope tilts the
-response.
+Bass head with a swept middle. Mid Sweep moves the middle control between about 400 Hz and 1 kHz, and Slope tilts the response.
 
 ### Spring Combo
 
 ![Spring Combo panel](docs/panel_spring_combo.png)
 
-Two-channel combo with spring reverb. Channel I has Bright and Boost switches. Both channels share the reverb and the
-master volume.
+Two-channel combo with spring reverb. Channel I has Bright and Boost switches. Both channels share the reverb and the master volume.
 
 ### Dual Rail
 
 ![Dual Rail panel](docs/panel_dual_rail.png)
 
-Relay-switched two-channel 250 W head. Channel II adds a mid sweep and its own volume. The Channel selector stands in
-for the relay footswitch.
+Relay-switched two-channel 250 W head. Channel II adds a mid sweep and its own volume. The Channel selector stands in for the relay footswitch.
 
-## Controls
+### Cabinets
 
-Every panel has these:
-
-| Control | Range | Default | Notes |
-|---|---|---|---|
-| Model | Family's models | First | Rebuilds the circuit behind a short fade |
-| Output Valves | Spec sheet's list | First | Changes the power-valve curves and bias |
-| Input / Channel | Family's jacks | First | High and low jacks, or channels |
-| Oversampling | 2x / 4x | 2x | 4x costs about twice the CPU |
-| Cabinet | Off and five cabinets | Per plugin, see the first table | Switches behind a short fade |
-| Input Trim | -36 to +36 dB | 0 dB | 0 dBFS at the input counts as 1 V peak at the amp's jack |
-| Output Level | -60 to +12 dB | -6 dB | With the cabinet off, 0 dBFS before this control is rated power into the rated load |
-
-Amp knobs run 0 to 10, as on the panels, and default to 5. Slope defaults to 0 and reverb depth to 3. Model, valve,
-input, oversampling and cabinet changes switch behind a short fade, so don't automate them.
-
-| Plugin | Amp controls |
-|---|---|
-| Classic Lead | Volume I, Volume II, Treble, Middle, Bass, Presence |
-| Cascade Lead | Preamp, Master, Treble, Middle, Bass, Presence |
-| Low End | Volume, Treble, Middle, Mid Sweep, Bass, Slope |
-| Spring Combo | Ch I Volume, Bright, Boost, Treble, Middle, Bass; Reverb Depth; Ch II Volume, Treble, Middle, Bass; Master |
-| Dual Rail | Ch I Gain, Treble, Middle, Bass, Presence; Ch II Gain, Treble, Middle, Mid Sweep, Bass, Volume |
-
-Latency is 16 samples and is reported to the host. The cabinet port comes after each plugin's knobs, so sessions saved
-with version 1.0 keep their settings and open with the plugin's default cabinet.
-
-## Cabinets
-
-Each cabinet is a short chain of filters shaped like a close-miked cabinet of that kind: the speaker's low-end
-resonance, the box's midrange character, the cone's presence peaks and the steep roll-off above them. They are level
-matched over 100 Hz to 5 kHz, so switching changes the tone more than the loudness, though peaks can rise by a few dB.
-Set the cabinet to **Off** to use your own speaker impulse response after the plugin.
+Each cabinet is a short chain of filters shaped like a close-miked cabinet of that kind: the speaker's low-end resonance, the box's midrange character, the cone's presence peaks and the steep roll-off above them. They are level matched over 100 Hz to 5 kHz, so switching changes the tone more than the loudness, though peaks can rise by a few dB. Set the cabinet to **Off** to use your own speaker impulse response after the plugin.
 
 | Cabinet | Character |
 |---|---|
@@ -226,30 +143,21 @@ Response at 48 kHz, in dB, from `cab_check`:
 | 4x10 Bass | -3.3 | 2.7 | 1.7 | -0.9 | -1.8 | -0.2 | 1.6 | 0.5 | -3.1 | -18.8 | -37.9 |
 | 1x15 Bass | 3.4 | 4.6 | 2.4 | 0.5 | -1.0 | 0.7 | 0.5 | -3.8 | -20.5 | -38.9 | -58.0 |
 
-## How the model works
+## How it is modelled
 
-- **Circuit solver:** each amp is entered as its schematic: resistors, capacitors, pots, valves and the output
-  transformer. A nonlinear state-space (DK-method) solver runs it every sample, using trapezoidal companion models for
-  the capacitors and damped Newton iteration on the valves, with a line search and a fallback for hard overdrive.
-- **Valves:** ECC83/12AX7 triodes and EL34, KT77 and 6550 pentodes use Koren's equations, built into lookup tables.
-  Grid current is modelled, so stages block and clip as they do in the real amps.
-- **Sections:** the amp is solved in sections (preamp, tone stack, phase splitter, power amp), with supply rails and
-  currents passed between them, so the power supply sags under load.
-- **Power amp:** push-pull pairs into an output transformer, modelled as an ideal centre tap with its inductance and
-  load, including the presence and feedback networks.
-- **Spring reverb:** the Spring Combo's tank is a separate DSP model, set to the level and decay the spec sheet gives.
-- **Oversampling:** the whole circuit runs at 2x or 4x behind windowed-sinc filters.
-- **Cabinet:** after the amp, at the host's sample rate, a chain of up to seven filters (low cut, resonance and
-  presence peaks, top-end roll-off) shapes the speaker-terminal signal. See [Cabinets](#cabinets).
-- **Portability:** plain C++17 and C11 with no dependencies apart from X11 for the Linux GUI. Denormals are flushed on
-  x86 and ARM so quiet tails don't slow the CPU down.
+- **Circuit solver** (`src/circuit.h`): each amp is entered as its schematic: resistors, capacitors, pots, valves and the output transformer. A nonlinear state-space (DK-method) solver runs it every sample, using trapezoidal companion models for the capacitors and damped Newton iteration on the valves, with a line search and a fallback for hard overdrive.
+- **Valves** (`src/tubes.h`): ECC83/12AX7 triodes and EL34, KT77 and 6550 pentodes use Koren's equations, built into lookup tables. Grid current is modelled, so stages block and clip as they do in the real amps.
+- **Sections** (`src/amp.cpp`): the amp is solved in sections (preamp, tone stack, phase splitter, power amp), with supply rails and currents passed between them, so the power supply sags under load.
+- **Power amp:** push-pull pairs into an output transformer, modelled as an ideal centre tap with its inductance and load, including the presence and feedback networks.
+- **Spring reverb** (`src/spring.h`): the Spring Combo's tank is a separate DSP model, set to the level and decay the spec sheet gives.
+- **Oversampling** (`src/oversampler.h`): the whole circuit runs at 2x or 4x behind windowed-sinc filters.
+- **Cabinet** (`src/cabinet.h`): after the amp, at the host's sample rate, a chain of up to seven filters (low cut, resonance and presence peaks, top-end roll-off) shapes the speaker-terminal signal. See [Cabinets](#cabinets).
 
-## Measured against the manual
+### Checked against the manual
 
-Measured at 48 kHz with 2x oversampling. The sheets don't say where the other controls sat, so tone figures are shown
-for the setting named in each row.
+`spec_test` measures every model against its spec sheet, at 48 kHz with 2x oversampling. The sheets don't say where the other controls sat, so tone figures are shown for the setting named in each row.
 
-### Close to the manual
+Close to the manual:
 
 | Check | Model | Manual |
 |---|---|---|
@@ -271,11 +179,9 @@ for the setting named in each row.
 | SC212 mid, Ch I / Ch II | 15.4 / 17.3 dB | 15 / 17 dB |
 | SC212 treble and bass, mid down | 41.9-43.1 / 36.6-38.9 dB | 37-40 / 34 dB |
 
-DC points 11 and 14 (splitter grids) read 33-38 V against 23-25 V in the table. They sit behind 1M resistors, so a
-meter of that era would load them down; the points beside them match. This is an explanation, not something the
-manual says.
+DC points 11 and 14 (splitter grids) read 33-38 V against 23-25 V in the table. They sit behind 1M resistors, so a meter of that era would load them down; the points beside them match. This is an explanation, not something the manual says.
 
-### Misses
+Misses:
 
 | Check | Model | Manual |
 |---|---|---|
@@ -293,24 +199,18 @@ manual says.
 | Power at 10% THD, CL100 | 143 W into 16 ohms | 170 W into 4 ohms |
 | Power at 10% THD, CL50/CH50 | 62 W into 16 ohms | 90 W into 16 ohms |
 
-The CL100 and CL50 sheets give different treble figures for one shared drawing, so the model can't match both. The
-same applies to CH100 and CH50.
+The CL100 and CL50 sheets give different treble figures for one shared drawing, so the model can't match both. The same applies to CH100 and CH50.
 
-## Estimates
+### Estimates
 
-The manual doesn't give these, so they are guesses. Tune them by ear:
+The manual doesn't give these, so they are reasoned estimates:
 
-- **Valve curves:** ECC83 is Koren's fit, trimmed to the manual's DC table. EL34 and 6550 use Koren values recalled
-  from memory, and KT77 is an estimate with no published fit.
-- **Transformers and supply:** output transformer inductances and impedance (impedance is set from rated power), choke
-  values and supply stiffness.
-- **Bias:** EL34 uses the marked voltage, except the LE50, which uses -29 V instead of "approx -26 V" to stay under the
-  25 W plate rating. KT77 and 6550 are set to a target idle current. The DR250's 6550 sits at -86 V, not the
-  bulletin's -75 V, which would far exceed the 6550's rating on this valve fit.
+- **Valve curves:** ECC83 is Koren's fit, trimmed to the manual's DC table. EL34 and 6550 use Koren values recalled from memory, and KT77 is an estimate with no published fit.
+- **Transformers and supply:** output transformer inductances and impedance (impedance is set from rated power), choke values and supply stiffness.
+- **Bias:** EL34 uses the marked voltage, except the LE50, which uses -29 V instead of "approx -26 V" to stay under the 25 W plate rating. KT77 and 6550 are set to a target idle current. The DR250's 6550 sits at -86 V, not the bulletin's -75 V, which would far exceed the 6550's rating on this valve fit.
 - **HT voltages:** SC212 465 V and DR250 640 V.
 - **Spring tank:** delay times and tone. Only its type, level and decay come from the manual.
-- **Cabinets:** every filter frequency, Q and gain in `src/cabinet.h`. They follow the general shape of each kind of
-  cabinet, not measurements of a particular product.
+- **Cabinets:** every filter frequency, Q and gain in `src/cabinet.h`. They follow the general shape of each kind of cabinet, not measurements of a particular product.
 
 Doubtful schematic readings, each assumed as stated in `src/amp.cpp`:
 
@@ -319,71 +219,86 @@ Doubtful schematic readings, each assumed as stated in `src/amp.cpp`:
 - The SC212 reverb pot is assumed to be 250K.
 - The SC212's dry resistor reads 6M8. It may explain the SC212 sensitivity miss, so it's the first value to recheck.
 
-## Simplifications
+### Simplifications
 
 - Output valves are matched pairs into a resistive load, with no speaker impedance curve.
-- The cabinets are fixed filter shapes: no microphone choice, room or speaker break-up. For more detail, set Cabinet to
-  Off and use an impulse response.
+- The cabinets are fixed filter shapes: no microphone choice, room or speaker break-up. For more detail, set Cabinet to Off and use an impulse response.
 - The macOS build has no GUI.
-- Effects loops, preamp out, the DR250's DI output and the footswitches aren't modelled. Boost, Reverb and the
-  channel choice are controls instead.
+- Effects loops, preamp out, the DR250's DI output and the footswitches aren't modelled. Boost, Reverb and the channel choice are controls instead.
 - One more model in the manual isn't included yet.
 
-## Code layout
+## Build
 
-| File | Contents |
+Plain C++17 and C11 with no dependencies apart from X11 for the Linux GUI. Denormals are flushed on x86 and ARM so quiet tails don't slow the CPU down. No LV2 SDK is needed. The VST3, CLAP and AU builds come from one CLAP implementation (`src/clap`) through [clap-wrapper](https://github.com/free-audio/clap-wrapper): configuring with `AG_PLUGIN_FORMATS=ON` (the CMake default) downloads clap-wrapper and the CLAP, VST3 and AudioUnit SDKs from GitHub at pinned versions. Set it to `OFF` to build LV2 only, with no downloads.
+
+| Source | What it is |
 |---|---|
-| `src/circuit.h` | The nonlinear circuit solver |
-| `src/tubes.h` | Valve equations, lookup tables and bias solving |
-| `src/amp.h`, `amp.cpp` | The amp circuits, one builder per family |
-| `src/spring.h` | Spring reverb |
-| `src/oversampler.h` | Oversampling filters |
-| `src/cabinet.h` | Speaker cabinets |
+| `src/circuit.h`, `src/tubes.h`, `src/amp.h`, `amp.cpp`, `src/spring.h`, `src/oversampler.h`, `src/cabinet.h` | The amp model: circuit solver, valves, amp circuits, spring reverb, oversampling, cabinets |
 | `src/engine.h` | The engine every format runs: amp, cabinet, levels and the fade around selector changes |
-| `src/plugin.cpp` | LV2 entry points |
-| `src/clap/ashgrove_clap.cpp` | The CLAP plugins: parameters, state, latency, GUI. clap-wrapper builds VST3 and AU from it |
-| `src/clap/entry.cpp` | The exported CLAP entry point, compiled into each format |
 | `src/ports.h` | Port tables shared by the plugin, the Turtle generator and the tests |
+| `src/plugin.cpp`, `src/ui/ui_lv2.c` | LV2 plugin and GUI |
+| `src/clap/ashgrove_clap.cpp`, `src/clap/entry.cpp` | The CLAP plugins (parameters, state, latency, GUI) and the exported entry point; clap-wrapper builds VST3 and AU from them |
+| `src/ui/layouts.h`, `src/ui/panel.h`, `src/ui/ui_window.c` | The five panel layouts, the panel drawing and mouse handling, and the Win32 and X11 window layers shared by the LV2 and CLAP GUIs |
+| `src/ui/style.h`, `canvas.h`, `font.h` | Davidian GUI house style: palette, software renderer and stroke font |
 | `src/lv2_abi.h` | The LV2 C interface, so no SDK is needed |
-| `src/ui/layouts.h` | The five panel layouts |
-| `src/ui/panel.h` | GUI drawing and mouse handling, with no platform code |
-| `src/ui/style.h`, `canvas.h`, `font.h` | House style, software renderer and stroke font |
-| `src/ui/ui_window.c` | The Win32 and X11 window layers, shared by the LV2 and CLAP GUIs |
-| `src/ui/ui_lv2.c` | LV2 UI entry points |
 | `tools/gen_ttl.cpp` | Writes `manifest.ttl` and `ashgrove.ttl` for the build's system from the port tables |
-| `tests/spec_test.cpp` | Measures every model against the manual |
-| `tests/idle_check.cpp` | Checks for oscillation with no input |
-| `tests/cab_check.cpp` | Checks every cabinet's stability, level and shape |
-| `tests/plugin_check.cpp` | Loads the built LV2 library and runs every plugin and cabinet, on any system |
-| `tests/clap_check.cpp` | Loads the built CLAP and checks parameters, processing, state and the GUI |
-| `tests/host_check.cpp` | Checks the bundle with lilv and runs every combination |
-| `tests/ui_ports_check.cpp` | Checks the panels against the plugin ports |
-| `tests/ui_check.c` | Hosts the built GUI and drives it with mouse messages |
-| `tests/ui_render.c` | Renders every panel to a .bmp file |
-| `.github/workflows/build.yml` | Builds and tests on Windows, Linux and macOS, and publishes tagged releases |
 | `prebuilt/` | Ready-built plugins for each system and format, the same files as the latest release |
 
-## References
+The build uses CMake 3.21 or later and a C++17 compiler. The LV2 bundle lands in `<build folder>/lv2/ashgrove.lv2`, and the VST3, CLAP and AU plugins in `<build folder>/plugins`.
 
-The model re-implements equations from these published works. No code was copied from them.
+### Windows (Visual Studio)
 
-1. N. Koren, "Improved vacuum tube models for SPICE simulations", *Glass Audio* 8(5), 1996. The triode and pentode
-   equations and the starting valve parameters.
-2. D. T. Yeh, "Digital implementation of musical distortion circuits by analysis and simulation", PhD thesis, Stanford
-   University, 2009. The nonlinear state-space (DK) method used by the circuit solver.
-3. R. Bristow-Johnson, "Cookbook formulae for audio EQ biquad filter coefficients" (the Audio EQ Cookbook). The
-   low-pass, high-pass and peaking filters in the cabinets.
+Needs Visual Studio 18 with its C++ tools and CMake; edit `VS` at the top of `build.sh` if your install is somewhere else. From Git Bash:
+
+```bash
+sh build.sh
+```
+
+It builds LV2 only unless you run it as `AG_PLUGIN_FORMATS=ON sh build.sh`.
+
+### macOS, Linux
+
+On Linux, install CMake, a C++ compiler, Ninja and the X11 headers (`libx11-dev` on Debian/Ubuntu), then:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel
+```
+
+On macOS, install the Xcode command-line tools and CMake, then build for both Apple silicon and Intel:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" && cmake --build build --parallel
+```
+
+## Tests
+
+Windows, from Git Bash (rebuilds, then runs every check and writes the results to `build/`):
+
+```bash
+sh run_checks.sh
+```
+
+- `spec_test` measures every model against its spec sheet (power, sensitivity, tone ranges, boost, bright, reverb) and the manual's DC voltage table.
+- `idle_check` runs each model with no input, at half and full controls, and reports any oscillation.
+- `cab_check` checks every cabinet at 44.1 to 192 kHz: stable, level-matched, and with the expected low cut and top-end roll-off. It prints each cabinet's response.
+- `plugin_check <library>` loads the built LV2 library the way a host does and runs every plugin with every cabinet, on any system.
+- `clap_check <.clap binary>` loads the built CLAP the way a host does and checks every plugin: parameters against the port tables, processing with every cabinet, parameter changes, saving and loading state, and on Windows opening the GUI in a host window. The VST3 and AU versions run the same code.
+- `ui_ports_check` checks that every panel control sits on the right port with the plugin's default and range.
+- `ui_render <folder>` draws every panel to a BMP file without opening a window.
+- `host_check` (Windows) validates the bundle with the LV2 parser from an Ardour 9 install and runs every model, valve and input combination.
+- `ui_check` (Windows) loads the LV2 GUI the way a Windows host does and drives each panel with mouse messages.
+
+CI also runs Steinberg's VST3 validator on all three systems, Apple's `auval` on each Audio Unit, and lilv's `lv2info` on the LV2 bundle on Linux, and checks that the Linux plugins don't need a newer C++ runtime than the host has.
+
+GitHub Actions builds and tests every format on Windows, Linux and macOS for every push (see `.github/workflows/build.yml`). Pushing a version tag such as `v1.2.0` publishes a release with a zip for each system.
 
 ## Use of AI
 
-This project was made with AI assistance. The code, tests, LV2 metadata, build scripts and this README were written
-by Claude (Anthropic's Claude Opus 5.5, through Claude Code), directed and reviewed by the author.
+Made with generative AI (Claude Code, Anthropic's Claude Opus 5.5), directed and reviewed by Davidian. The code, tests, LV2 metadata, build scripts and this README were written by the AI.
 
-- **The author** supplied the service manual, the GUI house style, the names and the licensing choices. They also
-  decided which amps to build and which valve options to offer.
+- **The author** supplied the service manual, the GUI house style, the names and the licensing choices. They also decided which amps to build and which valve options to offer.
 - **The AI**:
-  - read component values and topology from the schematics and spec sheets, and chose the estimates listed under
-    [Estimates](#estimates)
+  - read component values and topology from the schematics and spec sheets, and chose the estimates listed under [Estimates](#estimates)
   - wrote the circuit solver, valve models, amp circuits and spring reverb
   - chose the cabinet types and designed their filter shapes
   - adapted the house-style GUI to the five panels, and wrote the Linux window layer from the house X11 code
@@ -396,23 +311,23 @@ by Claude (Anthropic's Claude Opus 5.5, through Claude Code), directed and revie
   - every cabinet's stability, level and shape
   - every plugin and cabinet run from the built library on Windows, Linux and macOS
   - the bundle loaded through lilv on Windows and Linux
-  - the CLAP loaded and checked on all three systems, the VST3 through Steinberg's validator, and each Audio Unit
-    through Apple's `auval`
+  - the CLAP loaded and checked on all three systems, the VST3 through Steinberg's validator, and each Audio Unit through Apple's `auval`
   - the Windows GUI loaded and driven by simulated mouse input, and opened in a host window through CLAP
-- **Not checked:** the sound hasn't been compared with real amplifiers or cabinets. Some valve parameters were recalled
-  from the AI's memory rather than looked up, and the values under [Estimates](#estimates) should be tuned by ear. The
-  Linux GUI, the VST3, CLAP and AU versions and the macOS builds haven't been tried in a host.
+- **Not checked:** the sound hasn't been compared with real amplifiers or cabinets. Some valve parameters were recalled from the AI's memory rather than looked up, and the values under [Estimates](#estimates) should be tuned by ear. The Linux GUI, the VST3, CLAP and AU versions and the macOS builds haven't been tried in a host.
 
-## License
+## References
 
-Copyright (C) 2026 Davidian
+The model re-implements equations from these published works. No code was copied from them.
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
-version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text.
+- N. Koren, "Improved vacuum tube models for SPICE simulations", *Glass Audio* 8(5), 1996. The triode and pentode equations and the starting valve parameters.
+- D. T. Yeh, "Digital implementation of musical distortion circuits by analysis and simulation", PhD thesis, Stanford University, 2009. The nonlinear state-space (DK) method used by the circuit solver.
+- R. Bristow-Johnson, "Cookbook formulae for audio EQ biquad filter coefficients" (the Audio EQ Cookbook). The low-pass, high-pass and peaking filters in the cabinets.
 
-## Third-party licences
+## Licence
+
+Copyright (C) 2026 Davidian. GPL-3.0-or-later: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text. Every source file starts with an SPDX licence line saying which licence applies to it.
+
+### Third-party licences
 
 | Component | Licence | How it's used |
 |---|---|---|
@@ -428,11 +343,6 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](L
 | AudioUnitSDK (Apple) | Apache-2.0 | Used by clap-wrapper for the AU version; parts of it are built into the Audio Units. Apache-2.0 is compatible with GPL-3.0. |
 | GitHub Actions (`actions/checkout`, `upload-artifact`, `download-artifact`) | MIT | Used by the build workflow only. Nothing is included in the plugins. |
 
-The SDKs above are downloaded when the build is configured and are not stored in this repository. Each release zip
-includes their licence texts in its `licenses` folder.
+The SDKs above are downloaded when the build is configured and are not stored in this repository. Each release zip includes their licence texts in its `licenses` folder.
 
-Every source file starts with an SPDX licence line saying which of these applies.
-
-This project is not affiliated with or endorsed by the maker of the original amplifiers. Valve type numbers (EL34,
-KT77, 6550, ECC83, 12AX7) are generic industry designations. VST is a registered trademark of Steinberg Media
-Technologies GmbH. Audio Units is a trademark of Apple Inc.
+This project is not affiliated with or endorsed by the maker of the original amplifiers. Valve type numbers (EL34, KT77, 6550, ECC83, 12AX7) are generic industry designations. VST is a registered trademark of Steinberg Media Technologies GmbH. Audio Units is a trademark of Apple Inc.
