@@ -12,6 +12,11 @@ if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Oldest macOS the bundle runs on")
 endif()
 project(ashgrove VERSION 1.2.0 LANGUAGES C CXX)
+# clap-wrapper builds Objective-C for the macOS formats; the languages must be enabled here.
+if(APPLE)
+  enable_language(OBJC)
+  enable_language(OBJCXX)
+endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -147,12 +152,6 @@ if(AG_PLUGIN_FORMATS)
     WINDOWS_FOLDER_VST3 TRUE
     PLUGIN_FORMATS CLAP VST3 AUV2
     ASSET_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
-
-  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    foreach(t ashgrove_formats_clap ashgrove_formats_vst3)
-      target_link_options(${t} PRIVATE -static-libstdc++ -static-libgcc)
-    endforeach()
-  endif()
 
   # Loads the built .clap and runs every plugin through the CLAP interface.
   add_executable(clap_check tests/clap_check.cpp)

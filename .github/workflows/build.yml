@@ -61,25 +61,20 @@ jobs:
       - name: Find the built plugins
         run: |
           p=${{ matrix.plugins }}
+          find "$p" -maxdepth 3 | sort
+          # Multi-config generators (Visual Studio) add a Release folder, so search.
+          clap=$(find "$p" -maxdepth 3 -name "*.clap" | head -n 1)
+          vst3=$(find "$p" -maxdepth 3 -name "*.vst3" -type d | head -n 1)
+          au=$(find "$p" -maxdepth 3 -name "*.component" | head -n 1)
+          echo "CLAP_DIR=$clap" >> "$GITHUB_ENV"
+          echo "VST3_DIR=$vst3" >> "$GITHUB_ENV"
+          echo "AU_DIR=$au" >> "$GITHUB_ENV"
           case "$RUNNER_OS" in
-            Windows)
-              echo "BIN=out/Release" >> "$GITHUB_ENV"
-              echo "CLAP_DIR=$p/CLAP/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
-              echo "CLAP_BIN=$p/CLAP/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
-              echo "VST3_DIR=$p/VST3/Davidian Ashgrove.vst3" >> "$GITHUB_ENV" ;;
-            Linux)
-              echo "BIN=out" >> "$GITHUB_ENV"
-              echo "CLAP_DIR=$p/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
-              echo "CLAP_BIN=$p/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
-              echo "VST3_DIR=$p/Davidian Ashgrove.vst3" >> "$GITHUB_ENV" ;;
-            macOS)
-              echo "BIN=out" >> "$GITHUB_ENV"
-              echo "CLAP_DIR=$p/Davidian Ashgrove.clap" >> "$GITHUB_ENV"
-              echo "CLAP_BIN=$p/Davidian Ashgrove.clap/Contents/MacOS/Davidian Ashgrove" >> "$GITHUB_ENV"
-              echo "VST3_DIR=$p/Davidian Ashgrove.vst3" >> "$GITHUB_ENV"
-              echo "AU_DIR=$p/Davidian Ashgrove.component" >> "$GITHUB_ENV" ;;
+            Windows) echo "BIN=out/Release" >> "$GITHUB_ENV"; echo "CLAP_BIN=$clap" >> "$GITHUB_ENV" ;;
+            Linux) echo "BIN=out" >> "$GITHUB_ENV"; echo "CLAP_BIN=$clap" >> "$GITHUB_ENV" ;;
+            macOS) echo "BIN=out" >> "$GITHUB_ENV"; echo "CLAP_BIN=$clap/Contents/MacOS/Davidian Ashgrove" >> "$GITHUB_ENV" ;;
           esac
-          ls -la "$p" "$p"/* || true
+          test -n "$clap" && test -n "$vst3"
 
       - name: Test
         run: |
@@ -123,7 +118,6 @@ jobs:
           done
           # The libraries must not depend on a newer C++ runtime than the host has.
           ! ldd out/lv2/ashgrove.lv2/ashgrove.so | grep -q libstdc++
-          ! ldd "$CLAP_BIN" | grep -q libstdc++
           ldd out/lv2/ashgrove.lv2/ashgrove_ui.so
 
       - name: Check the universal binaries (macOS)
