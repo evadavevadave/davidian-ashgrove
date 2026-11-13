@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.21)
 if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Oldest macOS the bundle runs on")
 endif()
-project(ashgrove VERSION 1.2.0 LANGUAGES C CXX)
+project(ashgrove VERSION 1.3.0 LANGUAGES C CXX)
 # clap-wrapper builds Objective-C for the macOS formats; the languages must be enabled here.
 if(APPLE)
   enable_language(OBJC)

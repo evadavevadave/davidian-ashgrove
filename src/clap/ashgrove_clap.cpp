@@ -26,7 +26,7 @@ using namespace ashgrove;
 namespace {
 
 const int kMaxPorts = 32;
-const char* const kVersion = "1.2.0";
+const char* const kVersion = "1.3.0";
 const char* const kUrl = "https://github.com/evadavevadave/davidian-ashgrove";
 
 const char* const kFeatures[] = {CLAP_PLUGIN_FEATURE_AUDIO_EFFECT, CLAP_PLUGIN_FEATURE_DISTORTION,

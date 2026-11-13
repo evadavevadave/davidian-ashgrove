@@ -118,6 +118,7 @@ static const std::vector<ModelRow>& rows() {
     static const std::vector<ModelRow> r = {
         {"CL100", F_STANDARD, 0, 0, {Power::EL34, Power::KT77, Power::T6550}, 0.04, 1e-3, 115},
         {"CL50", F_STANDARD, 1, 0, {Power::EL34, Power::KT77, Power::T6550}, 0.03, 1e-3, 50},
+        {"CL50 II", F_STANDARD, 1, 2, {Power::EL34}, 0.03, 1.5e-3, 50},
         {"CH100", F_MASTER, 0, 0, {Power::EL34, Power::KT77, Power::T6550}, 0.04, 0.15e-3, 115},
         {"CC100", F_MASTER, 1, 0, {Power::EL34, Power::KT77, Power::T6550}, 0.04, 0.15e-3, 115},
         {"CH50", F_MASTER, 2, 0, {Power::EL34, Power::KT77, Power::T6550}, 0.03, 0.1e-3, 50},
@@ -125,8 +126,10 @@ static const std::vector<ModelRow>& rows() {
         {"LE50", F_BASS, 0, 0, {Power::EL34, Power::KT77, Power::T6550}, 0.03, 6e-3, 50},
         {"LE100", F_BASS, 1, 0, {Power::EL34, Power::KT77, Power::T6550}, 0.03, 12e-3, 135},
         {"SC212", F_COMBO, 0, 0, {Power::KT77, Power::T6550}, 0.04, 3.5e-3, 120},
+        {"SC212 II", F_COMBO, 0, 2, {Power::T6550}, 0.04, 30e-3, 120},
         {"SC410", F_COMBO, 1, 0, {Power::KT77, Power::T6550}, 0.04, 3.5e-3, 120},
         {"DR250", F_DUAL, 0, 0, {Power::T6550, Power::KT77}, 0.05, 0.7e-3, 250},
+        {"DR250 II", F_DUAL, 0, 1, {Power::T6550}, 0.05, 0.4e-3, 250},
     };
     return r;
 }
@@ -211,7 +214,7 @@ int main(int argc, char** argv) {
     }
 
     // Tone ranges, small signal, other controls at 5.
-    struct Tone { const char* name; Family f; int model; int input; int p; double hz; double spec; const char* label; };
+    struct Tone { const char* name; Family f; int model; int input; int p; double hz; double spec; const char* label; double sweep = -1; };
     static const Tone tones[] = {
         {"CL100", F_STANDARD, 0, 0, P_TREBLE, 10000, 35, "treble"},
         {"CL100", F_STANDARD, 0, 0, P_MID, 600, 9.5, "middle"},
@@ -247,9 +250,10 @@ int main(int argc, char** argv) {
         {"DR250 I", F_DUAL, 0, 0, P_MID, 600, 12, "middle"},
         {"DR250 I", F_DUAL, 0, 0, P_BASS, 100, 24, "bass"},
         {"DR250 I", F_DUAL, 0, 0, P_PRESENCE, 5000, 13, "presence"},
-        {"DR250 II", F_DUAL, 0, 1, P_TREBLE2, 10000, 40, "treble"},
+        // Sweep "low" (400 Hz) is the control at 10 in this model, "high" (1 kHz) at 0.
+        {"DR250 II", F_DUAL, 0, 1, P_TREBLE2, 10000, 40, "treble, sweep low", 1.0},
         {"DR250 II", F_DUAL, 0, 1, P_MID2, 600, 12, "middle"},
-        {"DR250 II", F_DUAL, 0, 1, P_BASS2, 100, 25, "bass"},
+        {"DR250 II", F_DUAL, 0, 1, P_BASS2, 100, 25, "bass, sweep high", 0.0},
     };
     // Features the sheets state directly.
     {
@@ -332,6 +336,7 @@ int main(int argc, char** argv) {
         setAll(*amp, 0.5);
         amp->setParam(P_VOL1, 0.3);
         amp->setParam(P_VOL2, 0.3);
+        if (t.sweep >= 0) amp->setParam(P_SWEEP, t.sweep);
         amp->setParam(P_MASTER, 0.5);
         amp->applyControls();
         const double at5 = swingDb(*amp, t.p, t.hz, 0.5e-3);

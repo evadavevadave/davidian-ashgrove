@@ -76,7 +76,7 @@ private:
     void buildPower(Circuit& c, Wire& w, const PowerCfg& p, const PiCfg& pi);
     PowerCfg powerCfg(double ht, double rs, double cres, double rdrop, double cdrop,
                       double cscreen, double bleed, double rated, double rload, double rscreen,
-                      double rgrid, double count, double markedEl34Bias);
+                      double rgrid, double count, double markedBias);
 
     int rail(Circuit& c, Wire& w, double r, double cap);
     int source(Circuit& c, Wire& w);

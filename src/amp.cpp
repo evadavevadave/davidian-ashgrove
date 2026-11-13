@@ -120,22 +120,28 @@ int Amp::standardMix(Circuit& c, int plate2, int plate1) {
     return m;
 }
 
-// Marked EL34 bias is used as drawn; KT77 is set to the same idle current, and
-// 6550 to about 60% of its 35 W rating, since the manual gives no bias for them.
+// Bias. Marked voltages are used as drawn: EL34 on the lead and bass amps, and 6550
+// on the 250 W head (its bulletin's -75 V). Where nothing is marked, KT77 is set to
+// the EL34's idle current, and 6550 to 21 W, 60% of the original 35 W rating.
 Amp::PowerCfg Amp::powerCfg(double ht, double rs, double cres, double rdrop, double cdrop,
                             double cscreen, double bleed, double rated, double rload,
-                            double rscreen, double rgrid, double count, double markedEl34Bias) {
+                            double rscreen, double rgrid, double count, double markedBias) {
     PowerCfg c{};
     const double headroom = 60.0;
     c.ht = ht; c.rs = rs; c.cres = cres; c.rdrop = rdrop; c.cdrop = cdrop;
     c.cscreen = cscreen; c.bleed = bleed; c.rated = rated; c.rload = rload;
     c.rscreen = rscreen; c.rgrid = rgrid; c.count = count;
-    c.zpp = 2.0 * (ht - headroom) * (ht - headroom) / rated;
+    // Output transformer primary, plate to plate. The 50 W (784-139) and 100 W
+    // transformers are 3.2k and 1.7k: the published impedances of the replacements
+    // sold for these chassis. The 250 W head's (C2728) isn't published, so it is
+    // estimated from its rated power and HT.
+    c.zpp = count == 1 ? 3200.0 : (count == 2 ? 1700.0 : 2.0 * (ht - headroom) * (ht - headroom) / rated);
     const PentodeParams& el34 = pentodeParams(Power::EL34);
     const PentodeParams& tube = pentodeParams(cfg_.tube);
     double idle;
+    const bool dual = cfg_.family == F_DUAL;  // Its marked bias is for 6550.
     if (cfg_.tube == Power::EL34) {
-        c.bias = markedEl34Bias;
+        c.bias = markedBias;
         idle = pentodeIa(el34, c.bias, ht, ht);
         // A marked voltage that would exceed the 25 W plate rating on this tube
         // fit is backed off to 70% of the rating (only the LE50's "approx" -26 V).
@@ -145,8 +151,17 @@ Amp::PowerCfg Amp::powerCfg(double ht, double rs, double cres, double rdrop, dou
         }
     } else if (cfg_.tube == Power::KT77) {
         // The DR250 is drawn for 6550 only, so its -75 V does not apply to KT77.
-        idle = cfg_.family == F_DUAL ? 19.0 / ht : pentodeIa(el34, markedEl34Bias, ht, ht);
+        idle = dual ? 19.0 / ht : pentodeIa(el34, markedBias, ht, ht);
         c.bias = solveBias(tube, ht, ht, idle);
+    } else if (dual) {
+        // -75 V idles at about 41 W on this 6550 fit: within the 42 W rating of
+        // current 6550s, so it is used as marked; it is only backed off above that.
+        c.bias = markedBias;
+        idle = pentodeIa(tube, c.bias, ht, ht);
+        if (idle * ht > 42.0) {
+            idle = 42.0 / ht;
+            c.bias = solveBias(tube, ht, ht, idle);
+        }
     } else {
         idle = 21.0 / ht;
         c.bias = solveBias(tube, ht, ht, idle);
@@ -164,8 +179,10 @@ void Amp::buildPower(Circuit& c, Wire& w, const PowerCfg& g, const PiCfg& pi) {
     c.V(src, c.input(g.ht + totalIdle * g.rs));
     c.R(src, res, g.rs);
     c.C(res, GND, g.cres);
-    c.R(res, mid, 90.0);  // Choke resistance and inductance are estimates.
-    c.L(mid, cho, 8.0);
+    // Choke 1471-263: 5 H at 120 mA and about 115 ohms, the published ratings of its
+    // replacements. The 250 W head's choke is unmarked and assumed to be the same.
+    c.R(res, mid, 115.0);
+    c.L(mid, cho, 5.0);
     if (g.cscreen > 0.0) c.C(cho, GND, g.cscreen);
     if (g.bleed > 0.0) c.R(cho, GND, g.bleed);
     c.R(cho, a, g.rdrop);
@@ -219,7 +236,10 @@ void Amp::buildPower(Circuit& c, Wire& w, const PowerCfg& g, const PiCfg& pi) {
     }
     const int bias = c.node();
     c.V(bias, c.input(g.bias));
-    const double rb = cfg_.tube == Power::T6550 ? 150 * k : 220 * k;  // "USA" value on the lead power schematic.
+    // Grid resistors: 220K, with the "USA" (6550) value where the drawings give one:
+    // 150K on the lead and bass amps, 180K on the combo. The 250 W head uses 150K.
+    const bool usa = cfg_.tube == Power::T6550;
+    const double rb = cfg_.family == F_DUAL ? 150 * k : (!usa ? 220 * k : (cfg_.family == F_COMBO ? 180 * k : 150 * k));
     c.R(da, bias, rb);
     c.R(db, bias, rb);
     const int g1a = c.node(), g1b = c.node(), g2a = c.node(), g2b = c.node(), va = c.node(),
@@ -529,8 +549,13 @@ void Amp::buildCombo() {
         c.R(k3, GND, 2.7 * k);
         c.R(r, p3, 100 * k);
         c.triode(g3, p3, k3);
+        // V3a feeds the dry mix through R19 (6M8) and the reverb driver V2a through
+        // R13 (1M) and C11 (500p) onto its 1M grid resistor R15.
+        const int rq = c.node(), rg = c.node();
         c.C(p3, y, 47 * n);
-        c.R(y, GND, 1 * M);
+        c.R(y, rq, 1 * M);
+        c.C(rq, rg, 500 * p);
+        c.R(rg, GND, 1 * M);
         c.R(y, mix, 6.8 * M);
         c.R(t2, mix, 1 * M);
         c.R(mix, GND, 470 * k);
@@ -548,10 +573,12 @@ void Amp::buildCombo() {
         c.C(p4, l, 10 * n);
         c.R(l, GND, 270 * k);
         w.oSig = c.probe(p4);
-        w.oAux = c.probe(y);
+        w.oAux = c.probe(rg);  // The reverb driver's grid.
     }
     PiCfg pi{270 * k, 1 * M, 470.0, 10 * k, 22 * k, 100 * n, 10 * n, 22 * n, 1 * p, 100 * k, 0.0, false, true};
-    PowerCfg g = powerCfg(465, 70, 50 * u, 10 * k, 50 * u, 50 * u, 112 * k, 120, 8, 1.5 * k, 1.5 * k, 2, -42);
+    // HT isn't marked; 468 V as on the 100 W bass amp, which uses the same mains
+    // transformer.
+    PowerCfg g = powerCfg(468, 70, 50 * u, 10 * k, 50 * u, 50 * u, 112 * k, 120, 8, 1.5 * k, 1.5 * k, 2, -42);
     buildPower(seg_[2], wire_[2], g, pi);
 }
 
@@ -572,12 +599,18 @@ void Amp::build2000() {
         c.triode(g1, p1, k1);
         c.C(p1, t, 22 * n);
         c.pot(t, vw, GND, 1 * M, Circuit::LOG, chI ? P_VOL1 : P_VOL2);
-        const int k2 = c.node(), p2 = c.node(), y = c.node(), g3 = c.node();
+        const int k2 = c.node(), p2 = c.node(), g3 = c.node();
         c.R(k2, GND, 2.7 * k);
         c.C(k2, GND, 680 * n);
         c.R(r, p2, 100 * k);
         c.triode(vw, p2, k2);
-        c.C(p2, y, 22 * n);
+        // Channel I is DC coupled into the third stage: no coupling cap is drawn, and
+        // the 680K/100K divider and the 3K3 cathode resistor set that stage's bias.
+        int y = p2;
+        if (!chI) {
+            y = c.node();
+            c.C(p2, y, 22 * n);
+        }
         c.R(y, g3, 680 * k);
         c.C(y, g3, 5 * n);
         c.R(g3, GND, 100 * k);
@@ -589,8 +622,12 @@ void Amp::build2000() {
         Wire& w = wire_[1];
         const int r = rail(c, w, 10 * k, 50 * u);
         const int src = source(c, w);
-        const int y = c.node(), g3 = c.node(), k3 = c.node(), pl = c.node();
-        c.C(src, y, 22 * n);
+        const int g3 = c.node(), k3 = c.node(), pl = c.node();
+        int y = src;  // Channel I: DC coupled, see above.
+        if (!chI) {
+            y = c.node();
+            c.C(src, y, 22 * n);
+        }
         c.R(y, g3, 680 * k);
         c.C(y, g3, 5 * n);
         c.R(g3, GND, 100 * k);
@@ -599,9 +636,10 @@ void Amp::build2000() {
         c.triode(g3, pl, k3);
         int tw;
         if (chI) {
-            tw = leadStack(c, pl, 33 * k, 470 * p, 22 * n, 22 * n, P_TREBLE, P_BASS, P_MID, true);
+            // Both channels wire the middle pot as a variable resistor (cap to its top).
+            tw = leadStack(c, pl, 33 * k, 470 * p, 22 * n, 22 * n, P_TREBLE, P_BASS, P_MID, false);
         } else {
-            const int s = c.node(), q = c.node(), top = c.node(), j = c.node(), mb = c.node(), mw = c.node();
+            const int s = c.node(), q = c.node(), top = c.node(), j = c.node(), mb = c.node();
             tw = c.node();
             c.R(pl, q, 10 * k);
             c.rheostat(q, s, 100 * k, Circuit::LIN, P_SWEEP);
@@ -609,8 +647,8 @@ void Amp::build2000() {
             c.pot(top, tw, j, 250 * k, Circuit::LIN, P_TREBLE2);
             c.C(s, j, 22 * n);
             c.rheostat(j, mb, 1 * M, Circuit::LOG, P_BASS2);
-            c.pot(mb, mw, GND, 25 * k, Circuit::LIN, P_MID2);
-            c.C(s, mw, 22 * n);
+            c.rheostat(mb, GND, 25 * k, Circuit::LIN, P_MID2);
+            c.C(s, mb, 22 * n);
         }
         const int g4 = c.node(), nb = c.node(), kf = c.node(), y2 = c.node();
         c.C(tw, g4, 22 * n);
@@ -634,10 +672,11 @@ void Amp::build2000() {
             const int top = c.node();
             out = c.node();
             c.R(y2, top, 22 * k);
-            // Schematic reads "1K LOG"; 1M assumed, matching the other volume pots.
-            c.pot(top, out, GND, 1 * M, Circuit::LOG, P_MASTER);
+            // VR11 is 1K LOG, as drawn: both channels end in a low-impedance network
+            // for the relay and the 10K effects loop.
+            c.pot(top, out, GND, 1 * k, Circuit::LOG, P_MASTER);
         }
-        c.R(out, GND, 18 * k);  // Load of the mix resistors in the next section.
+        c.R(out, GND, 20 * k);  // Load of the 10K + 10K mix divider in the next section.
         w.oSig = c.probe(out);
     }
     {  // V3 mix stage with its own feedback.
@@ -666,7 +705,7 @@ void Amp::build2000() {
         w.oSig = c.probe(j);
     }
     PiCfg pi{1 * M, 1 * M, 470.0, 10 * k, 4.7 * k, 100 * n, 22 * n, 100 * n, 1 * p, 100 * k, 100 * n, false, false};
-    PowerCfg g = powerCfg(640, 60, 25 * u, 22 * k, 50 * u, 25 * u, 112 * k, 250, 8, 1 * k, 1.5 * k, 3, -75);
+    PowerCfg g = powerCfg(640, 60, 50 * u, 22 * k, 50 * u, 50 * u, 112 * k, 250, 8, 1 * k, 1.5 * k, 3, -75);
     buildPower(seg_[3], wire_[3], g, pi);
 }
 
@@ -710,7 +749,7 @@ void Amp::process(const double* in, double* out, int count) {
     const int os = os_.factor();
     const bool combo = cfg_.family == F_COMBO;
     // Tank return scale, calibrated to the +17 dB insertion gain on the SC212 sheet.
-    const double revGain = 5.0;
+    const double revGain = 10.1;
     for (int i = 0; i < count; ++i) {
         for (int j = 0; j < os; ++j) {
             const double x = os == 1 ? in[i] : os_.up(j == 0 ? in[i] : 0.0);

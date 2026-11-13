@@ -2,7 +2,7 @@
 
 Circuit-modelled guitar and bass amplifier plugins (LV2, VST3, CLAP and Audio Unit): 11 valve amps from a classic 1980s British amp range, solved at circuit level from the service-manual schematics, with a choice of output valves and speaker cabinets. They come as five plugins, one per amp family, each with a model selector.
 
-**A close model, not an exact copy.** It is a simulation of the circuits from their component values, not sampled or measured amps, and some details are reasoned estimates (listed under [Estimates](#estimates)). It has not been compared side by side with built units, so expect it to sound close to the hardware rather than identical.
+**A close model, not an exact copy.** It is a simulation of the circuits from their component values, not sampled or measured amps, and some details are reasoned estimates (listed under [Estimates and sources](#estimates-and-sources)). It has not been compared side by side with built units, so expect it to sound close to the hardware rather than identical.
 
 ![The GUI (Classic Lead)](docs/panel_classic_lead.png)
 
@@ -155,29 +155,32 @@ Response at 48 kHz, in dB, from `cab_check`:
 
 ### Checked against the manual
 
-`spec_test` measures every model against its spec sheet, at 48 kHz with 2x oversampling. The sheets don't say where the other controls sat, so tone figures are shown for the setting named in each row.
+`spec_test` measures every model against its spec sheet, at 48 kHz with 2x oversampling. Where a sheet states the condition (all controls full, mid down, sweep low or high) the test uses it; otherwise tone figures are shown for the setting named in each row.
 
 Close to the manual:
 
 | Check | Model | Manual |
 |---|---|---|
-| DC voltages, 17 test points in 4 configurations | Mostly within 5-10%; see below for points 11 and 14 | Table |
-| Power, CL100/CH100 EL34 | 127 W at 4% THD | 115 W |
-| Power, CL50/CH50 EL34 | 54 W at 3% THD | Over 50 W |
-| Power, LE50 EL34 | 51 W at 3% THD | Over 50 W |
-| Power, LE100 EL34 | 130 W at 3% THD | Over 100 W; 135 W at clipping |
-| Power, SC212 KT77 / 6550 | 132 W / 120 W at 4% THD | 120 W |
-| Power, DR250 6550 | 249 W at 5% THD | 250 W |
-| Sensitivity, CL100, CL50, CH100, CH50 | 1.2, 0.87, 0.19, 0.15 mV | 1, 1, 0.15, 0.1 mV |
-| Sensitivity, LE50, LE100, DR250 Ch I | 5.1, 18, 0.49 mV | 6, 12, 0.7 mV |
-| SC212 boost / bright | +10.2 dB / +17.4 dB | +11 dB / +16 dB |
+| DC voltages, 17 test points in 4 configurations | Within about 5%; see below for points 11 and 14 | Table |
+| Power, CL100/CH100 EL34 / KT77 / 6550 | 126 / 129 / 142 W at 4% THD | 115 W |
+| Power, CL50/CH50 EL34 / KT77 / 6550 | 53 / 47 / 45 W at 3% THD | Over 50 W |
+| Power, LE50 EL34 | 50 W at 3% THD | Over 50 W |
+| Power, LE100 EL34 / 6550 | 121 / 146 W at 3% THD | 135 W at clipping |
+| Power, SC212 KT77 / 6550 | 126 / 148 W at 4% THD | 120 W |
+| Power, DR250 6550 at the marked -75 V bias | 244 W at 5% THD | 250 W |
+| Sensitivity, CL50 Ch I / Ch II | 0.92 / 1.16 mV | 1 / 1.5 mV |
+| Sensitivity, LE50 | 5.1 mV | 6 mV |
+| Sensitivity, DR250 Ch II | 0.36 mV | 0.4 mV |
+| SC212 boost / bright | +10.4 dB / +17.4 dB | +11 dB / +16 dB |
 | Low input | -6.0 dB | -6 dB |
-| SC212 reverb level / decay (calibrated to the sheet) | +17.0 dB / 3.0 s | +17 dB / 3 s |
+| SC212 reverb level / decay (calibrated to the sheet) | +17.0 dB / 2.9 s | +17 dB / 3 s |
 | Lead bass, others down | 15.3 dB | 15 dB |
+| Lead treble, CH50 | 31.5 dB | 32 dB |
 | Bass amps: treble / bass / slope | 46.5 / 34.7 / -18.2 dB | 48 / 34 / -20 dB |
 | Bass amps: mid sweep range | Deepest cut moves from 1 kHz to 400 Hz | 400 Hz-1 kHz |
 | SC212 mid, Ch I / Ch II | 15.4 / 17.3 dB | 15 / 17 dB |
-| SC212 treble and bass, mid down | 41.9-43.1 / 36.6-38.9 dB | 37-40 / 34 dB |
+| DR250 Ch I presence | 15 dB | 13 dB |
+| DR250 Ch II treble, mid down, sweep low | 38.5 dB | 40 dB |
 
 DC points 11 and 14 (splitter grids) read 33-38 V against 23-25 V in the table. They sit behind 1M resistors, so a meter of that era would load them down; the points beside them match. This is an explanation, not something the manual says.
 
@@ -185,39 +188,55 @@ Misses:
 
 | Check | Model | Manual |
 |---|---|---|
-| Lead treble (others down) | 31 dB on all of them | CL100/CH100 35, CH50 32, CL50 26 dB |
-| Lead mid | 5.4-7.1 dB | 9.5 dB |
-| Presence, CL100/CH100, CL50/CH50 | 10 dB, 8.7 dB | 6 dB |
+| Lead treble (others down), CL100/CH100 / CL50 | 31 dB | 35 / 26 dB |
+| Lead mid | 5.4-7.0 dB | 9.5 dB |
+| Presence, lead amps | 8.5-9.1 dB | 6 dB |
+| Sensitivity, CL100 / CH100 / CH50 | 1.44 / 0.22 / 0.16 mV | 1 / 0.15 / 0.1 mV |
+| Sensitivity, LE100 / DR250 Ch I | 18 / 1.4 mV | 12 / 0.7 mV |
+| Sensitivity, SC212 Ch I / Ch II | 12.8 / 41.5 mV | 3.5 / 30 mV |
 | Bass amp mid | 13.7-16.6 dB | 18 dB |
-| DR250 bass, Ch I / Ch II | 14.3 dB both | 24 / 25 dB |
-| DR250 treble Ch II | 35 dB | 40 dB |
-| DR250 mid | 9.7-10 dB | 12 dB |
-| DR250 presence | 15 dB | 13 dB |
-| SC212 sensitivity | 12.4-13.2 mV | 3.5 mV |
-| 50 W models with 6550 | 33 W at 3% THD | Over 50 W |
-| DR250 with KT77 | 49 W at 5% THD, then 308 W at 10% | No KT77 figure |
-| Power at 10% THD, CL100 | 143 W into 16 ohms | 170 W into 4 ohms |
-| Power at 10% THD, CL50/CH50 | 62 W into 16 ohms | 90 W into 16 ohms |
+| SC212 treble and bass, mid down | 41.9-43.1 / 36.6-38.9 dB | 37-40 / 34 dB |
+| DR250 Ch I treble / bass, mid down | 31.5 / 29 dB | 28 / 24 dB |
+| DR250 Ch II bass, mid down, sweep high | 31.8 dB | 25 dB |
+| DR250 mid | 8.4-9.5 dB | 12 dB |
+| DR250 with KT77 | 76 W at 5% THD (crossover at a cold bias), 298 W at 10% | No KT77 figure |
+| Power at 10% THD, CL100 | 140 W into 16 ohms | 170 W into 4 ohms |
+| Power at 10% THD, CL50/CH50 | 61 W into 16 ohms | 90 W into 16 ohms |
 
-The CL100 and CL50 sheets give different treble figures for one shared drawing, so the model can't match both. The same applies to CH100 and CH50.
+Notes on the misses:
 
-### Estimates
+- The CL100 and CL50 sheets give different treble figures for one shared drawing (the 1987 sheet says Channel I has a rising treble and Channel II is flat, so they may have measured different channels), so the model can't match both. The same applies to CH100 and CH50.
+- The lead amps are all about 3 dB short on sensitivity and about 3 dB over on presence. Presence works by removing negative feedback at high frequencies, so both point to a feedback loop with about 3 dB more gain than the real amps. The circuit around the loop matches the drawings, so the likely cause is a remaining estimate: the power valves' transconductance into a resistive load instead of a speaker.
+- SC212 Channel I is 11 dB short where Channel II is 3 dB short. Its dry signal reaches the mixing stage through the 6M8 resistor (R19), and the third stage's 2K7 cathode resistor is unbypassed; both read clearly on the drawing and were rechecked, so the model follows the drawing rather than the sheet here.
 
-The manual doesn't give these, so they are reasoned estimates:
+### Estimates and sources
 
-- **Valve curves:** ECC83 is Koren's fit, trimmed to the manual's DC table. EL34 and 6550 use Koren values recalled from memory, and KT77 is an estimate with no published fit.
-- **Transformers and supply:** output transformer inductances and impedance (impedance is set from rated power), choke values and supply stiffness.
-- **Bias:** EL34 uses the marked voltage, except the LE50, which uses -29 V instead of "approx -26 V" to stay under the 25 W plate rating. KT77 and 6550 are set to a target idle current. The DR250's 6550 sits at -86 V, not the bulletin's -75 V, which would far exceed the 6550's rating on this valve fit.
-- **HT voltages:** SC212 465 V and DR250 640 V.
+Values the manual doesn't give, and where each one comes from:
+
+- **Output valves** (`src/tubes.h`, checked with `tools/fit_valves.cpp`):
+  - EL34: Koren's published parameters. At the data sheet's typical point (250 V, -13.5 V) the model draws 97 mA against 100 mA, with 12.2 mA/V against 11.
+  - 6550: Koren's later fitted set (2001), which gives 145 mA and 10.9 mA/V against the data sheet's 140 mA and 11 mA/V. The earlier table values used before ran 15% hot.
+  - KT77: no published Koren fit, so fitted to the KT77 data sheet's plate curves with Koren's usual exponent: 1.7% rms over ten points, 94 mA and 9.8 mA/V against 100 mA and 10.5 mA/V.
+  - Screen current: fitted for each valve to its data sheet's typical screen current.
+- **ECC83:** Koren's fit, trimmed to the manual's own DC table. Koren's later fitted 12AX7 set was also tried and matched the table less well (up to 8% off against about 4%).
+- **Output transformers:** 50 W 3.2k and 100 W 1.7k plate to plate, the published impedances of the replacements sold for these chassis. The 100 W bass amp and the combo share one transformer (C2668) and use the same figure. Only the 250 W head's (C2728) is still estimated from its rated power. Inductances are estimates.
+- **Choke** (1471-263): 5 H at 120 mA with about 115 ohms, from its replacements' ratings. The 250 W head's unmarked choke is assumed to be the same.
+- **Bias:** the marked voltages are used, EL34 on the lead and bass amps and 6550 on the 250 W head (its bulletin's -75 V, which idles at about 41 W, inside the 42 W rating of current 6550s). The LE50 uses -29 V instead of "approx -26 V" to stay under the EL34's 25 W rating. Where no bias is marked, KT77 is set to the EL34's idle current and 6550 to 21 W.
+- **HT voltages:** the SC212 uses 468 V like the 100 W bass amp, which has the same mains transformer. The DR250's 640 V is estimated from its 479 V winding and bridge rectifier.
+- **Supply:** the mains transformers' source resistance and the rectifier drop are estimates.
 - **Spring tank:** delay times and tone. Only its type, level and decay come from the manual.
 - **Cabinets:** every filter frequency, Q and gain in `src/cabinet.h`. They follow the general shape of each kind of cabinet, not measurements of a particular product.
 
-Doubtful schematic readings, each assumed as stated in `src/amp.cpp`:
+Readings rechecked on the drawings and corrected in this version:
 
-- The DR250 volume pot reads "1K log"; 1M is assumed.
-- DR250 Ch I has no visible third-stage coupling cap; .022 uF is assumed to match Ch II.
-- The SC212 reverb pot is assumed to be 250K.
-- The SC212's dry resistor reads 6M8. It may explain the SC212 sensitivity miss, so it's the first value to recheck.
+- **DR250 Channel I:** its second stage drives the third through a 680K/100K divider with no coupling cap. That is DC coupling by design, and the third stage's 3K3 cathode resistor is sized for it, so the cap assumed before is gone.
+- **DR250 middle pots:** in both channels they are wired as variable resistors with the cap to the top, not to the wiper as on the lead amps.
+- **DR250 Channel II volume:** it is 1K LOG, as drawn. Both channels end in a low-impedance network for the relay and the 10K effects loop.
+- **DR250 filters:** the reservoir and screen filters are 50 uF (two 100 uF banks in series), not 25 uF.
+- **SC212 grid resistors:** 180K with 6550 (the USA build), not 150K.
+- **SC212 reverb drive:** taken through R13 (1M) and C11 (500p) onto the driver's 1M grid resistor, and the send now comes from the driver's grid.
+
+`spec_test` now also measures each sheet's Channel II sensitivity, and uses the 250 W sheet's sweep settings: sweep low (400 Hz) for treble, sweep high (1 kHz) for bass, with mid down.
 
 ### Simplifications
 
@@ -242,6 +261,7 @@ Plain C++17 and C11 with no dependencies apart from X11 for the Linux GUI. Denor
 | `src/ui/style.h`, `canvas.h`, `font.h` | Davidian GUI house style: palette, software renderer and stroke font |
 | `src/lv2_abi.h` | The LV2 C interface, so no SDK is needed |
 | `tools/gen_ttl.cpp` | Writes `manifest.ttl` and `ashgrove.ttl` for the build's system from the port tables |
+| `tools/fit_valves.cpp` | Checks the output-valve models against their data sheets and fits the KT77; run by hand when changing `src/tubes.h` |
 | `prebuilt/` | Ready-built plugins for each system and format, the same files as the latest release |
 
 The build uses CMake 3.21 or later and a C++17 compiler. The LV2 bundle lands in `<build folder>/lv2/ashgrove.lv2`, and the VST3, CLAP and AU plugins in `<build folder>/plugins`.
@@ -288,7 +308,7 @@ sh run_checks.sh
 - `host_check` (Windows) validates the bundle with the LV2 parser from an Ardour 9 install and runs every model, valve and input combination.
 - `ui_check` (Windows) loads the LV2 GUI the way a Windows host does and drives each panel with mouse messages.
 
-CI also runs Steinberg's VST3 validator on all three systems, Apple's `auval` on each Audio Unit, and lilv's `lv2info` on the LV2 bundle on Linux, and checks that the Linux plugins don't need a newer C++ runtime than the host has.
+CI also runs Steinberg's VST3 validator on all three systems, Apple's `auval` on each Audio Unit, and lilv's `lv2info` on the LV2 bundle on Linux, and checks that the Linux LV2 plugin doesn't need a newer C++ runtime than the host has.
 
 GitHub Actions builds and tests every format on Windows, Linux and macOS for every push (see `.github/workflows/build.yml`). Pushing a version tag such as `v1.2.0` publishes a release with a zip for each system.
 
@@ -298,7 +318,8 @@ Made with generative AI (Claude Code, Anthropic's Claude Opus 5.5), directed and
 
 - **The author** supplied the service manual, the GUI house style, the names and the licensing choices. They also decided which amps to build and which valve options to offer.
 - **The AI**:
-  - read component values and topology from the schematics and spec sheets, and chose the estimates listed under [Estimates](#estimates)
+  - read component values and topology from the schematics and spec sheets, and chose the estimates listed under [Estimates and sources](#estimates-and-sources)
+  - researched valve data sheets and replacement-part ratings to replace estimates, and rechecked the drawings against the code
   - wrote the circuit solver, valve models, amp circuits and spring reverb
   - chose the cabinet types and designed their filter shapes
   - adapted the house-style GUI to the five panels, and wrote the Linux window layer from the house X11 code
@@ -313,7 +334,7 @@ Made with generative AI (Claude Code, Anthropic's Claude Opus 5.5), directed and
   - the bundle loaded through lilv on Windows and Linux
   - the CLAP loaded and checked on all three systems, the VST3 through Steinberg's validator, and each Audio Unit through Apple's `auval`
   - the Windows GUI loaded and driven by simulated mouse input, and opened in a host window through CLAP
-- **Not checked:** the sound hasn't been compared with real amplifiers or cabinets. Some valve parameters were recalled from the AI's memory rather than looked up, and the values under [Estimates](#estimates) should be tuned by ear. The Linux GUI, the VST3, CLAP and AU versions and the macOS builds haven't been tried in a host.
+- **Not checked:** the sound hasn't been compared with real amplifiers or cabinets. The valve, transformer and choke values are fitted to data sheets and published ratings, but the values still listed as estimates under [Estimates and sources](#estimates-and-sources) should be tuned by ear. The Linux GUI, the VST3, CLAP and AU versions and the macOS builds haven't been tried in a host.
 
 ## References
 
@@ -322,6 +343,9 @@ The model re-implements equations from these published works. No code was copied
 - N. Koren, "Improved vacuum tube models for SPICE simulations", *Glass Audio* 8(5), 1996. The triode and pentode equations and the starting valve parameters.
 - D. T. Yeh, "Digital implementation of musical distortion circuits by analysis and simulation", PhD thesis, Stanford University, 2009. The nonlinear state-space (DK) method used by the circuit solver.
 - R. Bristow-Johnson, "Cookbook formulae for audio EQ biquad filter coefficients" (the Audio EQ Cookbook). The low-pass, high-pass and peaking filters in the cabinets.
+- N. Koren, "Finding SPICE tube model parameters" (normankoren.com, 2001). The fitted 6550 parameters.
+- EL34, KT77 and 6550 manufacturers' data sheets: typical operating points, and the KT77's plate curves used for its fit.
+- Published ratings of the replacement output transformers and chokes sold for these chassis: the output transformer impedances and the choke's inductance and resistance.
 
 ## Licence
 
@@ -336,7 +360,7 @@ Copyright (C) 2026 Davidian. GPL-3.0-or-later: you can redistribute it and/or mo
 | lilv | ISC | `tests/host_check.cpp` re-states the signatures of the functions it calls and loads the copy that ships with Ardour 9 at run time. Not included in this repository. Notice in [LICENSE-LV2](LICENSE-LV2). |
 | Ardour 9 | GPL-2.0-or-later | Used only as a test host and as the source of lilv for `host_check`. No Ardour code is included. |
 | Microsoft C runtime | Visual Studio licence | The Windows build links it statically (`/MT`) into the DLLs. It counts as a system library under the GPL, so this is allowed. |
-| GCC runtime (`libstdc++`, `libgcc`) | GPL-3.0 with the GCC Runtime Library Exception | The Linux build links it statically, so the plugin runs on hosts with an older C++ runtime. The exception allows this. |
+| GCC runtime (`libstdc++`, `libgcc`) | GPL-3.0 with the GCC Runtime Library Exception | The Linux LV2 build links it statically, so it runs on hosts with an older C++ runtime; the Linux VST3 and CLAP builds use the system's. The exception allows this. |
 | CLAP SDK | MIT | Its headers define the CLAP interface the plugins implement. Built into the CLAP, VST3 and AU versions. |
 | clap-wrapper | MIT | Builds the VST3 and AU versions from the CLAP implementation. Its wrapper code is built into those versions. |
 | VST3 SDK (Steinberg) | MIT | Used by clap-wrapper for the VST3 version; parts of it are built into the VST3 plugin. |

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
-// Vacuum tube models (Koren equations). The service manual has no tube curves,
-// so these parameters are estimates; ECC83 is calibrated to the manual's DC table.
+// Vacuum tube models (Koren equations). The service manual has no tube curves, so
+// output valves are fitted to their data sheets, and the ECC83 to the manual's DC table.
 #pragma once
 #include <algorithm>
 #include <cmath>
@@ -17,10 +17,19 @@ struct PentodeParams {
 };
 
 inline const PentodeParams& pentodeParams(Power t) {
-    // EL34 and 6550: published Koren fits. KT77: estimate, no published fit.
-    static const PentodeParams el34{11.0, 1.35, 650.0, 4200.0, 60.0, 24.0, 1000.0, "EL34"};
-    static const PentodeParams kt77{10.5, 1.35, 700.0, 4500.0, 52.0, 20.0, 1000.0, "KT77"};
-    static const PentodeParams t6550{7.9, 1.35, 890.0, 4800.0, 60.0, 24.0, 1000.0, "6550"};
+    // Anode current: Koren's equations. KG2 sets the screen current in circuit.h,
+    // which is fitted to each data sheet's typical screen current (tools/fit_valves.cpp).
+    // EL34: Koren's published set. Data sheet check at 250 V/250 V/-13.5 V: 97 mA
+    //   (sheet 100), 12.2 mA/V (sheet 11), screen fitted to 14.9 mA.
+    // KT77: no published Koren set, so fitted to the KT77 data sheet's plate curves
+    //   (screen 250 V, 10 points from -2.5 to -25 V) with Koren's usual EX of 1.35, so
+    //   the current scales with screen voltage like the others: 1.7% rms. Typical
+    //   point 94 mA (sheet 100), 9.8 mA/V (sheet 10.5). KVB as EL34.
+    // 6550: Koren's later Tuparam fit (2001). At 250 V/250 V/-14 V: 145 mA (sheet 140),
+    //   10.9 mA/V (sheet 11), screen fitted to 12 mA.
+    static const PentodeParams el34{11.0, 1.35, 650.0, 3760.0, 60.0, 24.0, 1000.0, "EL34"};
+    static const PentodeParams kt77{9.15, 1.35, 945.1, 8650.0, 63.5, 24.0, 1000.0, "KT77"};
+    static const PentodeParams t6550{8.45, 1.247, 642.5, 10250.0, 48.92, 20.9, 1000.0, "6550"};
     switch (t) {
         case Power::EL34: return el34;
         case Power::KT77: return kt77;
