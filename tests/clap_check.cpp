@@ -205,12 +205,17 @@ static void checkPlugin(const clap_plugin_factory_t* factory, const clap_plugin_
     p->stop_processing(p);
     p->deactivate(p);
 
-    // GUI: Windows and Linux have one, sized like the LV2 panel; macOS has none.
+    // GUI: on every system, sized like the LV2 panel.
     auto* gui = static_cast<const clap_plugin_gui_t*>(p->get_extension(p, CLAP_EXT_GUI));
-#if defined(__APPLE__)
-    check(gui == nullptr, id, "no GUI on macOS");
-#else
     check(gui != nullptr, id, "has a GUI");
+#if defined(__APPLE__)
+    if (gui) {
+        uint32_t w = 0, h = 0;
+        check(gui->is_api_supported(p, CLAP_WINDOW_API_COCOA, false), id, "supports Cocoa embedding");
+        check(gui->create(p, CLAP_WINDOW_API_COCOA, false), id, "creates the Cocoa GUI");
+        check(gui->get_size(p, &w, &h) && w > 0 && h > 0, id, "reports the panel size");
+        gui->destroy(p);
+    }
 #endif
 #if defined(_WIN32)
     if (gui) {

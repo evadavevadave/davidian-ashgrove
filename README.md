@@ -247,7 +247,7 @@ Readings rechecked on the drawings and corrected in this version:
 
 ## Build
 
-Plain C++17 and C11 with no dependencies apart from X11 for the Linux GUI. Denormals are flushed on x86 and ARM so quiet tails don't slow the CPU down. No LV2 SDK is needed. The VST3, CLAP and AU builds come from one CLAP implementation (`src/clap`) through [clap-wrapper](https://github.com/free-audio/clap-wrapper): configuring with `AG_PLUGIN_FORMATS=ON` (the CMake default) downloads clap-wrapper and the CLAP, VST3 and AudioUnit SDKs from GitHub at pinned versions. Set it to `OFF` to build LV2 only, with no downloads.
+Plain C++17 and C11 with no dependencies apart from X11 for the Linux GUI and Cocoa for the macOS GUI. Denormals are flushed on x86 and ARM so quiet tails don't slow the CPU down. No LV2 SDK is needed. The VST3, CLAP and AU builds come from one CLAP implementation (`src/clap`) through [clap-wrapper](https://github.com/free-audio/clap-wrapper): configuring with `AG_PLUGIN_FORMATS=ON` (the CMake default) downloads clap-wrapper and the CLAP, VST3 and AudioUnit SDKs from GitHub at pinned versions. Set it to `OFF` to build LV2 only, with no downloads.
 
 | Source | What it is |
 |---|---|
@@ -256,7 +256,7 @@ Plain C++17 and C11 with no dependencies apart from X11 for the Linux GUI. Denor
 | `src/ports.h` | Port tables shared by the plugin, the Turtle generator and the tests |
 | `src/plugin.cpp`, `src/ui/ui_lv2.c` | LV2 plugin and GUI |
 | `src/clap/ashgrove_clap.cpp`, `src/clap/entry.cpp` | The CLAP plugins (parameters, state, latency, GUI) and the exported entry point; clap-wrapper builds VST3 and AU from them |
-| `src/ui/layouts.h`, `src/ui/panel.h`, `src/ui/ui_window.c` | The five panel layouts, the panel drawing and mouse handling, and the Win32 and X11 window layers shared by the LV2 and CLAP GUIs |
+| `src/ui/layouts.h`, `src/ui/panel.h`, `src/ui/ui_window.c` | The five panel layouts, the panel drawing and mouse handling, and the Win32, X11 and Cocoa window layers shared by the LV2 and CLAP GUIs |
 | `src/ui/style.h`, `canvas.h`, `font.h` | Davidian GUI house style: palette, software renderer and stroke font |
 | `src/lv2_abi.h` | The LV2 C interface, so no SDK is needed |
 | `tools/gen_ttl.cpp` | Writes `manifest.ttl` and `ashgrove.ttl` for the build's system from the port tables |
@@ -301,7 +301,7 @@ sh run_checks.sh
 - `idle_check` runs each model with no input, at half and full controls, and reports any oscillation.
 - `cab_check` checks every cabinet at 44.1 to 192 kHz: stable, level-matched, and with the expected low cut and top-end roll-off. It prints each cabinet's response.
 - `plugin_check <library>` loads the built LV2 library the way a host does and runs every plugin with every cabinet, on any system.
-- `clap_check <.clap binary>` loads the built CLAP the way a host does and checks every plugin: parameters against the port tables, processing with every cabinet, parameter changes, saving and loading state, and on Windows opening the GUI in a host window. The VST3 and AU versions run the same code.
+- `clap_check <.clap binary>` loads the built CLAP the way a host does and checks every plugin: parameters against the port tables, processing with every cabinet, parameter changes, saving and loading state, on Windows opening the GUI in a host window, and on macOS creating the Cocoa GUI. The VST3 and AU versions run the same code.
 - `ui_ports_check` checks that every panel control sits on the right port with the plugin's default and range.
 - `ui_render <folder>` draws every panel to a BMP file without opening a window.
 - `host_check` (Windows) validates the bundle with the LV2 parser from an Ardour 9 install and runs every model, valve and input combination.
