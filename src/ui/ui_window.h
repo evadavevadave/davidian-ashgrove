@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
 /* A native window showing one plugin's panel, for any plugin format: the LV2 GUI
- * (ui_lv2.c) and the CLAP GUI, which the VST3 and AU wrappers reuse. Win32 and X11
- * are implemented; on other systems ag_window_open returns NULL. All calls are made
+ * (ui_lv2.c) and the CLAP GUI, which the VST3 and AU wrappers reuse. Win32, X11 and
+ * Cocoa are implemented; elsewhere ag_window_open returns NULL. All calls are made
  * on the host's GUI thread. */
 #ifndef UI_WINDOW_H
 #define UI_WINDOW_H
@@ -22,10 +22,10 @@ typedef void (*AgPoll)(void* ctx);
 int ag_window_supported(void);
 /* The panel size for a plugin URI; 0 if the URI is unknown. */
 int ag_window_size(const char* plugin_uri, int* w, int* h);
-/* Opens the panel as a child of parent (an HWND or X11 Window), or NULL on failure. */
+/* Opens the panel as a child of parent (an HWND, X11 Window or NSView), or NULL on failure. */
 AgWindow* ag_window_open(const char* plugin_uri, void* parent, AgWrite write, AgPoll poll, void* ctx);
 void ag_window_close(AgWindow* w);
-/* The native handle: HWND or X11 Window. */
+/* The native handle: HWND, X11 Window or NSView. */
 void* ag_window_handle(AgWindow* w);
 void ag_window_show(AgWindow* w, int show);
 /* Shows a value set by the host. */

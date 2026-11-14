@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
 /* LV2 GUI for the five amplifier plugins: the LV2 UI entry points. The window itself
- * is in ui_window.c (Win32: ui:WindowsUI, X11: ui:X11UI), shared with the CLAP GUI.
+ * is in ui_window.c (Win32: ui:WindowsUI, X11: ui:X11UI, macOS: ui:CocoaUI), shared with the CLAP GUI.
  * The UI ABI is declared here so no LV2 SDK is needed. macOS builds ship without
  * this GUI; hosts show their own controls there. */
 #include <stdint.h>

@@ -66,7 +66,7 @@ void initDescriptors() {
 #if defined(_WIN32)
 const char* const kWindowApi = CLAP_WINDOW_API_WIN32;
 #elif defined(__APPLE__)
-const char* const kWindowApi = CLAP_WINDOW_API_COCOA;  // Not implemented: no GUI on macOS.
+const char* const kWindowApi = CLAP_WINDOW_API_COCOA;
 #else
 const char* const kWindowApi = CLAP_WINDOW_API_X11;
 #endif
@@ -373,8 +373,8 @@ bool guiCreate(const clap_plugin_t* p, const char* api, bool floating) {
     Plugin* s = self(p);
     if (!guiIsApiSupported(p, api, floating) || s->guiCreated) return false;
     s->guiCreated = true;
-    // X11 events are handled on a host timer; Win32 windows run their own timer.
-#if !defined(_WIN32)
+    // X11 events are handled on a host timer; Win32 and Cocoa views run their own timer.
+#if !defined(_WIN32) && !defined(__APPLE__)
     if (s->hostTimer) s->hostTimer->register_timer(s->host, 30, &s->timer);
 #endif
     return true;

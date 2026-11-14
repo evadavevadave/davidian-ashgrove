@@ -107,6 +107,21 @@ jobs:
             tail -n 3 "auval-$sub.txt"
           done
 
+      - name: Check the Cocoa GUI (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          exec > >(tee logs/ui.txt) 2>&1
+          mkdir -p shots
+          "$BIN/ui_mac_check" out/lv2/ashgrove.lv2 shots
+          grep -q CocoaUI out/lv2/ashgrove.lv2/manifest.ttl
+
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'macOS' && always()
+        with:
+          name: ui-screenshots-macos
+          path: shots/*.png
+          if-no-files-found: ignore
+
       - name: Check the bundle with lilv (Linux)
         if: runner.os == 'Linux'
         run: |

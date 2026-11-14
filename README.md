@@ -6,14 +6,14 @@ Circuit-modelled guitar and bass amplifier plugins (LV2, VST3, CLAP and Audio Un
 
 ![The GUI (Classic Lead)](docs/panel_classic_lead.png)
 
-Mono amps (mono or stereo tracks work too). The same GUI in the VST3, CLAP and LV2 versions on Windows and Linux; the macOS builds have no GUI, and hosts there show their own controls. GPL-3.0-or-later.
+Mono amps (mono or stereo tracks work too). The same GUI in every format on Windows, macOS and Linux. GPL-3.0-or-later.
 
 | Format | Windows | macOS | Linux |
 |---|---|---|---|
-| LV2 | yes | yes (no GUI) | yes |
-| VST3 | yes | yes (no GUI) | yes |
-| CLAP | yes | yes (no GUI) | yes |
-| Audio Unit (AUv2) | | yes (no GUI) | |
+| LV2 | yes | yes | yes |
+| VST3 | yes | yes | yes |
+| CLAP | yes | yes | yes |
+| Audio Unit (AUv2) | | yes | |
 
 | Plugin | Models | Output valves | Default cabinet |
 |---|---|---|---|
@@ -242,7 +242,6 @@ Readings rechecked on the drawings and corrected in this version:
 
 - Output valves are matched pairs into a resistive load, with no speaker impedance curve.
 - The cabinets are fixed filter shapes: no microphone choice, room or speaker break-up. For more detail, set Cabinet to Off and use an impulse response.
-- The macOS build has no GUI.
 - Effects loops, preamp out, the DR250's DI output and the footswitches aren't modelled. Boost, Reverb and the channel choice are controls instead.
 - One more model in the manual isn't included yet.
 
@@ -334,7 +333,8 @@ Made with generative AI (Claude Code, Anthropic's Claude Opus 5.5), directed and
   - the bundle loaded through lilv on Windows and Linux
   - the CLAP loaded and checked on all three systems, the VST3 through Steinberg's validator, and each Audio Unit through Apple's `auval`
   - the Windows GUI loaded and driven by simulated mouse input, and opened in a host window through CLAP
-- **Not checked:** the sound hasn't been compared with real amplifiers or cabinets. The valve, transformer and choke values are fitted to data sheets and published ratings, but the values still listed as estimates under [Estimates and sources](#estimates-and-sources) should be tuned by ear. The Linux GUI, the VST3, CLAP and AU versions and the macOS builds haven't been tried in a host.
+  - the macOS GUI loaded as a Cocoa LV2 UI, its drawing compared with the panel renderer, and driven by simulated mouse events
+- **Not checked:** the sound hasn't been compared with real amplifiers or cabinets. The valve, transformer and choke values are fitted to data sheets and published ratings, but the values still listed as estimates under [Estimates and sources](#estimates-and-sources) should be tuned by ear. The Linux and macOS GUIs, the VST3, CLAP and AU versions and the macOS builds haven't been tried in a host.
 
 ## References
 

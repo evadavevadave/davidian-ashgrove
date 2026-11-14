@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Davidian
-/* Native windows for the panels (see ui_window.h): a Win32 layer and an X11 layer
- * around panel.h, which has no platform code. macOS has no layer yet. */
+/* Native windows for the panels (see ui_window.h): Win32, X11 and Cocoa layers
+ * around panel.h, which has no platform code. */
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -317,6 +317,260 @@ static int window_idle(UI* ui)
     }
     if (ui->poll)
         ui->poll(ui->ctx);
+    ui_redraw(ui);
+    return 0;
+}
+
+/* ---- Window layer: Cocoa ----
+ * This file is compiled as Objective-C on macOS (manual retain/release). The view
+ * class is registered at run time under a name unique to this binary, because the
+ * CLAP, VST3, AU and LV2 builds can all be loaded into one host, and Objective-C
+ * classes share one namespace across every loaded library. */
+#elif defined(__APPLE__)
+#import <Cocoa/Cocoa.h>
+#include <dlfcn.h>
+#include <objc/runtime.h>
+#include <stdio.h>
+
+struct AgWindow {
+    Panel panel;
+    AgWrite write;
+    AgPoll poll;
+    void* ctx;
+    NSView* view;
+    CFRunLoopTimerRef timer;
+    CGColorSpaceRef space;
+};
+typedef struct AgWindow UI;
+
+static const char* const IVAR = "ag_ui";
+
+static UI* view_ui(id view)
+{
+    Ivar iv = class_getInstanceVariable(object_getClass(view), IVAR);
+    return iv ? *(UI**)((char*)view + ivar_getOffset(iv)) : NULL;
+}
+
+static void view_set_ui(id view, UI* ui)
+{
+    Ivar iv = class_getInstanceVariable(object_getClass(view), IVAR);
+    if (iv)
+        *(UI**)((char*)view + ivar_getOffset(iv)) = ui;
+}
+
+static NSPoint view_point(id view, NSEvent* e)
+{
+    return [(NSView*)view convertPoint:[e locationInWindow] fromView:nil];
+}
+
+static void ui_redraw(UI* ui)
+{
+    if (ui->panel.dirty && ui->view)
+        [ui->view setNeedsDisplay:YES];
+}
+
+static void m_drawRect(id self, SEL cmd, NSRect r)
+{
+    UI* ui = view_ui(self);
+    const Layout* L;
+    CGContextRef cg;
+    CGDataProviderRef dp;
+    CGImageRef img;
+    (void)cmd;
+    (void)r;
+    if (!ui)
+        return;
+    L = ui->panel.L;
+    if (ui->panel.dirty)
+        panel_draw(&ui->panel);
+    cg = [[NSGraphicsContext currentContext] CGContext];
+    if (!cg)
+        return;
+    /* Pixels are 0x00RRGGBB words: little-endian, alpha byte first and ignored. */
+    dp = CGDataProviderCreateWithData(NULL, ui->panel.px, (size_t)L->w * L->h * 4, NULL);
+    img = CGImageCreate((size_t)L->w, (size_t)L->h, 8, 32, (size_t)L->w * 4, ui->space,
+                        kCGBitmapByteOrder32Little | (CGBitmapInfo)kCGImageAlphaNoneSkipFirst, dp, NULL, false,
+                        kCGRenderingIntentDefault);
+    if (img) {
+        /* The view is flipped (origin top left); CGContextDrawImage draws bottom up. */
+        CGContextSaveGState(cg);
+        CGContextTranslateCTM(cg, 0, L->h);
+        CGContextScaleCTM(cg, 1, -1);
+        CGContextDrawImage(cg, CGRectMake(0, 0, L->w, L->h), img);
+        CGContextRestoreGState(cg);
+        CGImageRelease(img);
+    }
+    CGDataProviderRelease(dp);
+}
+
+static BOOL m_yes(id self, SEL cmd, id arg)
+{
+    (void)self;
+    (void)cmd;
+    (void)arg;
+    return YES;
+}
+
+static BOOL m_yes0(id self, SEL cmd)
+{
+    (void)self;
+    (void)cmd;
+    return YES;
+}
+
+static void m_mouseDown(id self, SEL cmd, NSEvent* e)
+{
+    UI* ui = view_ui(self);
+    const NSPoint pt = view_point(self, e);
+    (void)cmd;
+    if (!ui)
+        return;
+    [[(NSView*)self window] makeFirstResponder:self]; /* so the wheel reaches this view */
+    panel_mouse_down(&ui->panel, (float)pt.x, (float)pt.y, [e clickCount] == 2);
+    ui_redraw(ui);
+}
+
+static void m_mouseDragged(id self, SEL cmd, NSEvent* e)
+{
+    UI* ui = view_ui(self);
+    const NSPoint pt = view_point(self, e);
+    (void)cmd;
+    if (!ui)
+        return;
+    panel_mouse_move(&ui->panel, (float)pt.x, (float)pt.y, ([e modifierFlags] & NSEventModifierFlagShift) != 0);
+    ui_redraw(ui);
+}
+
+static void m_mouseUp(id self, SEL cmd, NSEvent* e)
+{
+    UI* ui = view_ui(self);
+    (void)cmd;
+    (void)e;
+    if (!ui)
+        return;
+    panel_mouse_up(&ui->panel);
+    ui_redraw(ui);
+}
+
+static void m_scrollWheel(id self, SEL cmd, NSEvent* e)
+{
+    UI* ui = view_ui(self);
+    const NSPoint pt = view_point(self, e);
+    float d;
+    (void)cmd;
+    if (!ui)
+        return;
+    d = (float)[e scrollingDeltaY];
+    if ([e hasPreciseScrollingDeltas])
+        d /= 10.0f; /* trackpads report points, not wheel notches */
+    if ([e isDirectionInvertedFromDevice])
+        d = -d; /* "natural" scrolling: up still turns a knob up */
+    if (d != 0.0f)
+        panel_wheel(&ui->panel, (float)pt.x, (float)pt.y, d,
+                    ([e modifierFlags] & NSEventModifierFlagShift) != 0);
+    ui_redraw(ui);
+}
+
+/* Copies a method's type encoding from NSView, so each override matches it. */
+static void add_method(Class c, SEL sel, IMP imp)
+{
+    Method m = class_getInstanceMethod([NSView class], sel);
+    class_replaceMethod(c, sel, imp, m ? method_getTypeEncoding(m) : "v@:@");
+}
+
+static Class view_class(void)
+{
+    char name[64];
+    Class c;
+    Dl_info info;
+    /* Named after this library's load address: unique per loaded binary. */
+    if (!dladdr((const void*)&view_class, &info))
+        info.dli_fbase = (void*)&view_class;
+    snprintf(name, sizeof name, "AshgrovePanelView_%lx", (unsigned long)(uintptr_t)info.dli_fbase);
+    c = objc_getClass(name);
+    if (!c) {
+        c = objc_allocateClassPair([NSView class], name, 0);
+        if (!c)
+            return Nil;
+        class_addIvar(c, IVAR, sizeof(UI*), sizeof(UI*) == 8 ? 3 : 2, "^v");
+        objc_registerClassPair(c);
+    }
+    /* Set on every open, in case a later binary was loaded at the same address. */
+    add_method(c, @selector(drawRect:), (IMP)m_drawRect);
+    add_method(c, @selector(isFlipped), (IMP)m_yes0);
+    add_method(c, @selector(isOpaque), (IMP)m_yes0);
+    add_method(c, @selector(acceptsFirstResponder), (IMP)m_yes0);
+    add_method(c, @selector(acceptsFirstMouse:), (IMP)m_yes);
+    add_method(c, @selector(mouseDown:), (IMP)m_mouseDown);
+    add_method(c, @selector(mouseDragged:), (IMP)m_mouseDragged);
+    add_method(c, @selector(mouseUp:), (IMP)m_mouseUp);
+    add_method(c, @selector(scrollWheel:), (IMP)m_scrollWheel);
+    return c;
+}
+
+static void tick(CFRunLoopTimerRef t, void* info)
+{
+    UI* ui = (UI*)info;
+    (void)t;
+    if (ui->poll)
+        ui->poll(ui->ctx);
+    ui_redraw(ui);
+}
+
+static int window_open(UI* ui, void* parent)
+{
+    const Layout* L = ui->panel.L;
+    Class c = view_class();
+    CFRunLoopTimerContext tc;
+    if (!c)
+        return 0;
+    ui->space = CGColorSpaceCreateDeviceRGB();
+    ui->view = [[c alloc] initWithFrame:NSMakeRect(0, 0, L->w, L->h)];
+    if (!ui->view) {
+        CGColorSpaceRelease(ui->space);
+        return 0;
+    }
+    view_set_ui(ui->view, ui);
+    if (parent)
+        [(NSView*)parent addSubview:ui->view];
+    memset(&tc, 0, sizeof tc);
+    tc.info = ui;
+    /* Picks up host updates, such as automation, also while a menu or drag is open. */
+    ui->timer = CFRunLoopTimerCreate(NULL, CFAbsoluteTimeGetCurrent() + 0.033, 0.033, 0, 0, tick, &tc);
+    CFRunLoopAddTimer(CFRunLoopGetMain(), ui->timer, kCFRunLoopCommonModes);
+    return 1;
+}
+
+static void window_close(UI* ui)
+{
+    if (ui->timer) {
+        CFRunLoopTimerInvalidate(ui->timer);
+        CFRelease(ui->timer);
+        ui->timer = NULL;
+    }
+    if (ui->view) {
+        view_set_ui(ui->view, NULL); /* the host may keep the view a little longer */
+        [ui->view removeFromSuperview];
+        [ui->view release];
+        ui->view = nil;
+    }
+    if (ui->space) {
+        CGColorSpaceRelease(ui->space);
+        ui->space = NULL;
+    }
+}
+
+static void* window_widget(UI* ui) { return (void*)ui->view; }
+
+static void window_show(UI* ui, int show)
+{
+    if (ui->view)
+        [ui->view setHidden:show ? NO : YES];
+}
+
+/* The run loop timer drives redraws, so idle only flushes pending ones. */
+static int window_idle(UI* ui)
+{
     ui_redraw(ui);
     return 0;
 }

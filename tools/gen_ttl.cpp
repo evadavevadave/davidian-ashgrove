@@ -3,7 +3,7 @@
 // Writes manifest.ttl and ashgrove.ttl for the bundle from the port tables.
 // Usage: gen_ttl <bundle dir> <library suffix> <ui class>
 //   library suffix: .dll, .so or .dylib
-//   ui class: WindowsUI, X11UI, or none (no GUI in this build)
+//   ui class: WindowsUI, X11UI, CocoaUI, or none (no GUI in this build)
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -47,15 +47,20 @@ int main(int argc, char** argv) {
                 ext.c_str());
         if (hasUi) {
             fprintf(m, " ;\n    <http://lv2plug.in/ns/extensions/ui#ui> <%s#ui> .\n\n", d.uri);
-            // The native GUI (src/ui), one UI per plugin, all in one library.
+            // The native GUI (src/ui), one UI per plugin, all in one library. A Cocoa
+            // UI returns its NSView for the host to place, so it needs no parent.
+            const bool cocoa = ui == "CocoaUI";
             fprintf(m,
                     "<%s#ui> a <http://lv2plug.in/ns/extensions/ui#%s> ;\n"
                     "    <http://lv2plug.in/ns/extensions/ui#binary> <ashgrove_ui%s> ;\n"
-                    "    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;\n"
+                    "%s"
                     "    lv2:optionalFeature <http://lv2plug.in/ns/extensions/ui#resize> ,\n"
+                    "%s"
                     "        <http://lv2plug.in/ns/extensions/ui#idleInterface> ;\n"
                     "    lv2:extensionData <http://lv2plug.in/ns/extensions/ui#idleInterface> .\n\n",
-                    d.uri, ui.c_str(), ext.c_str());
+                    d.uri, ui.c_str(), ext.c_str(),
+                    cocoa ? "" : "    lv2:requiredFeature <http://lv2plug.in/ns/extensions/ui#parent> ;\n",
+                    cocoa ? "        <http://lv2plug.in/ns/extensions/ui#parent> ,\n" : "");
         } else {
             fputs(" .\n\n", m);
         }
