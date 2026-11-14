@@ -524,7 +524,8 @@ static int window_open(UI* ui, void* parent)
     CFRunLoopTimerContext tc;
     if (!c)
         return 0;
-    ui->space = CGColorSpaceCreateDeviceRGB();
+    /* The house colours are sRGB values, so they look the same as on Windows. */
+    ui->space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
     ui->view = [[c alloc] initWithFrame:NSMakeRect(0, 0, L->w, L->h)];
     if (!ui->view) {
         CGColorSpaceRelease(ui->space);

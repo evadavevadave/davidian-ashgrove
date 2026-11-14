@@ -100,7 +100,7 @@ static double compare(NSView* v, const Layout* L, const char* shot)
     for (y = 2; y < L->h; y += 5)
         for (x = 2; x < L->w; x += 5) {
             const NSInteger px = x * [rep pixelsWide] / L->w, py = y * [rep pixelsHigh] / L->h;
-            NSColor* c = [[rep colorAtX:px y:py] colorUsingColorSpace:[NSColorSpace deviceRGBColorSpace]];
+            NSColor* c = [[rep colorAtX:px y:py] colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
             const uint32_t want = ref.px[y * L->w + x];
             sum += fabs([c redComponent] * 255.0 - ((want >> 16) & 255));
             sum += fabs([c greenComponent] * 255.0 - ((want >> 8) & 255));
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
             snprintf(shot, sizeof shot, "%s/mac-%d.png", argc > 2 ? argv[2] : ".", li);
             diff = compare(v, L, argc > 2 ? shot : NULL);
             snprintf(label, sizeof label, "Cocoa drawing matches the panel (mean difference %.1f of 255)", diff);
-            check(label, diff < 12.0);
+            check(label, diff < 4.0);
 
             knob = first_of(L, W_KNOB);
             if (knob) {
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
                         for (y = y0; y < y0 + 2 * (int)knob->r; ++y)
                             for (x = x0; x < x0 + 2 * (int)knob->r; ++x) {
                                 NSColor* c = [[rep colorAtX:x * [rep pixelsWide] / L->w y:y * [rep pixelsHigh] / L->h]
-                                    colorUsingColorSpace:[NSColorSpace deviceRGBColorSpace]];
+                                    colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
                                 const uint32_t want = ref.px[y * L->w + x];
                                 sum += fabs([c redComponent] * 255.0 - ((want >> 16) & 255))
                                        + fabs([c greenComponent] * 255.0 - ((want >> 8) & 255))
@@ -213,7 +213,7 @@ int main(int argc, char** argv)
                             }
                         snprintf(label, sizeof label, "host value shows on the knob (mean difference %.1f)",
                                  sum / cnt);
-                        check(label, sum / cnt < 12.0);
+                        check(label, sum / cnt < 4.0);
                     }
                     panel_free(&ref);
                 }
