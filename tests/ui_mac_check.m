@@ -81,6 +81,21 @@ static const Widget* first_of(const Layout* L, int kind)
     return NULL;
 }
 
+/* Summed channel difference between the cached drawing at panel point (x, y) and a
+ * 0xRRGGBB pixel. Reads the stored bytes, the same ones the screenshot PNG gets:
+ * converting through NSColor adds a colour-space shift of its own. */
+static double pixel_diff(NSBitmapImageRep* rep, const Layout* L, int x, int y, uint32_t want)
+{
+    const NSInteger px = x * [rep pixelsWide] / L->w, py = y * [rep pixelsHigh] / L->h;
+    const unsigned char* p = [rep bitmapData] + py * [rep bytesPerRow] + px * ([rep bitsPerPixel] / 8);
+    if ([rep bitsPerSample] != 8 || [rep samplesPerPixel] < 3)
+        return 1e9;
+    if (([rep bitmapFormat] & NSBitmapFormatAlphaFirst) && [rep hasAlpha])
+        ++p;
+    return fabs(p[0] - (double)((want >> 16) & 255)) + fabs(p[1] - (double)((want >> 8) & 255))
+           + fabs(p[2] - (double)(want & 255));
+}
+
 /* Mean difference per channel (0-255) between the view's drawing and the panel's pixels. */
 static double compare(NSView* v, const Layout* L, const char* shot)
 {
@@ -99,12 +114,7 @@ static double compare(NSView* v, const Layout* L, const char* shot)
     panel_draw(&ref);
     for (y = 2; y < L->h; y += 5)
         for (x = 2; x < L->w; x += 5) {
-            const NSInteger px = x * [rep pixelsWide] / L->w, py = y * [rep pixelsHigh] / L->h;
-            NSColor* c = [[rep colorAtX:px y:py] colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
-            const uint32_t want = ref.px[y * L->w + x];
-            sum += fabs([c redComponent] * 255.0 - ((want >> 16) & 255));
-            sum += fabs([c greenComponent] * 255.0 - ((want >> 8) & 255));
-            sum += fabs([c blueComponent] * 255.0 - (want & 255));
+            sum += pixel_diff(rep, L, x, y, ref.px[y * L->w + x]);
             n += 3;
         }
     panel_free(&ref);
@@ -203,12 +213,7 @@ int main(int argc, char** argv)
                         [v cacheDisplayInRect:[v bounds] toBitmapImageRep:rep];
                         for (y = y0; y < y0 + 2 * (int)knob->r; ++y)
                             for (x = x0; x < x0 + 2 * (int)knob->r; ++x) {
-                                NSColor* c = [[rep colorAtX:x * [rep pixelsWide] / L->w y:y * [rep pixelsHigh] / L->h]
-                                    colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
-                                const uint32_t want = ref.px[y * L->w + x];
-                                sum += fabs([c redComponent] * 255.0 - ((want >> 16) & 255))
-                                       + fabs([c greenComponent] * 255.0 - ((want >> 8) & 255))
-                                       + fabs([c blueComponent] * 255.0 - (want & 255));
+                                sum += pixel_diff(rep, L, x, y, ref.px[y * L->w + x]);
                                 cnt += 3;
                             }
                         snprintf(label, sizeof label, "host value shows on the knob (mean difference %.1f)",
